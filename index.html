@@ -307,6 +307,7 @@
                 <h3 style="margin:24px 0 12px;">Предпросмотр уведомления</h3>
                 <div class="notification-preview-area" id="previewArea">
                     <button class="btn btn-secondary" onclick="showPreviewNotification()">Показать пример</button>
+					<button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
                 </div>
             </div>
 
@@ -888,6 +889,17 @@
                 </div>
             `;
         }
+		
+		function sendTestToOBS() {
+			const testAchievement = {
+				name: 'Тестовая ачивка',
+				icon: '🎯',
+				color: state.overlaySettings.borderColor || '#9147ff'
+			};
+			showNotification('TestUser', testAchievement);
+			addLog('🎯 Тестовое уведомление отправлено в OBS', 'info');
+		}
+
 
         function addChatMessage(username, message, color) {
             const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
