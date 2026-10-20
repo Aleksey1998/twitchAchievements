@@ -286,12 +286,16 @@
                         Добавьте браузерный источник в OBS с URL ниже для отображения уведомлений.
                     </p>
                     <div class="form-group" style="margin-bottom:16px;">
-                        <label>URL для OBS Browser Source</label>
+                        <label>URL для OBS Browser Source (с авторизацией)</label>
                         <div style="display:flex;gap:8px;">
-                            <input type="text" id="overlayUrl" readonly style="font-family:monospace;">
-                            <button class="btn btn-secondary" onclick="copyOverlayUrl()">Копировать</button>
+                            <input type="text" id="overlayUrlWithToken" readonly style="font-family:monospace;font-size:11px;">
+                            <button class="btn btn-primary" onclick="copyOBSUrlWithToken()">🔗 Копировать URL с токеном</button>
                         </div>
+                        <p style="font-size:11px;color:#adadb8;margin-top:4px;">
+                            ⚠️ Этот URL содержит ваш токен авторизации. Не передавайте его третьим лицам!
+                        </p>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Позиция уведомления</label>
@@ -321,10 +325,9 @@
                 <div class="notification-preview-area" id="previewArea">
                     <button class="btn btn-secondary" onclick="showPreviewNotification()">Показать пример</button>
                 </div>
-				<br>
-				<div style="display:flex;gap:8px;flex-wrap:wrap;">
-					<button class="btn btn-secondary" onclick="openOBSWindow()">🪟 Открыть OBS в новом окне</button>
-					<button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                    <button class="btn btn-secondary" onclick="openOBSWindow()">🪟 Открыть OBS в новом окне</button>
+                    <button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
                 </div>
             </div>
 
@@ -427,8 +430,6 @@
             setupTabs();
             startUptimeTimer();
             checkAuthCallback();
-            
-            // Настройка каналов связи между вкладками
             setupNotificationChannels();
             
             if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
@@ -442,7 +443,7 @@
             checkOverlayMode();
         }
 
-        // ============ КАНАЛЫ СВЯЗИ МЕЖДУ ВКЛАДКАМИ ============
+        // ============ КАНАЛЫ СВЯЗИ ============
         function checkForNotifications() {
             try {
                 const data = localStorage.getItem('twitch_test_notification');
@@ -459,17 +460,14 @@
         }
 
         function setupNotificationChannels() {
-            // 1. Слушаем изменения в localStorage
             window.addEventListener('storage', (event) => {
                 if (event.key === 'twitch_test_notification' && event.newValue) {
                     checkForNotifications();
                 }
             });
             
-            // 2. Polling для OBS Browser Source (каждые 500мс)
             setInterval(checkForNotifications, 500);
             
-            // 3. BroadcastChannel для обычных вкладок
             try {
                 state.broadcastChannel = new BroadcastChannel('twitch-achievements');
                 state.broadcastChannel.onmessage = (event) => {
@@ -482,32 +480,12 @@
                 console.warn('BroadcastChannel не поддерживается');
             }
             
-            // 4. Прямые сообщения через postMessage
             window.addEventListener('message', (event) => {
                 if (event.data && event.data.type === 'test-notification') {
                     showNotification(event.data.username, event.data.achievement);
                     addLog('🎯 Прямое уведомление получено', 'info');
                 }
             });
-        }
-
-        function checkOverlayMode() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('overlay') === 'true') {
-                document.getElementById('overlayContainer').classList.add('active');
-                
-                if (state.accessToken && state.userInfo) {
-                    document.getElementById('dashboard').style.display = 'none';
-                    const channel = localStorage.getItem('twitch_channel');
-                    if (channel && !state.chatConnected) {
-                        document.getElementById('channelName').value = channel;
-                        setTimeout(() => connectChat(), 1000);
-                    }
-                } else {
-                    document.getElementById('dashboard').style.display = 'flex';
-                    addLog('Войдите через Twitch для работы оверлея', 'info');
-                }
-            }
         }
 
         // ============ СОСТОЯНИЕ ============
@@ -614,6 +592,46 @@
                 const channel = localStorage.getItem('twitch_channel');
                 if (channel && !state.chatConnected) {
                     setTimeout(() => connectChat(), 1000);
+                }
+            }
+        }
+
+        function checkOverlayMode() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('overlay') === 'true') {
+                document.getElementById('overlayContainer').classList.add('active');
+                
+                const tokenFromUrl = params.get('token');
+                const channelFromUrl = params.get('channel');
+                
+                if (tokenFromUrl) {
+                    state.accessToken = tokenFromUrl;
+                    localStorage.setItem('twitch_access_token', tokenFromUrl);
+                    
+                    if (channelFromUrl) {
+                        localStorage.setItem('twitch_channel', channelFromUrl);
+                    }
+                    
+                    fetchUserInfo().then(() => {
+                        if (state.userInfo) {
+                            document.getElementById('dashboard').style.display = 'none';
+                            const channel = channelFromUrl || localStorage.getItem('twitch_channel');
+                            if (channel && !state.chatConnected) {
+                                document.getElementById('channelName').value = channel;
+                                setTimeout(() => connectChat(), 1000);
+                            }
+                        }
+                    });
+                } else if (state.accessToken && state.userInfo) {
+                    document.getElementById('dashboard').style.display = 'none';
+                    const channel = localStorage.getItem('twitch_channel');
+                    if (channel && !state.chatConnected) {
+                        document.getElementById('channelName').value = channel;
+                        setTimeout(() => connectChat(), 1000);
+                    }
+                } else {
+                    document.getElementById('dashboard').style.display = 'flex';
+                    addLog('Войдите через Twitch для работы оверлея', 'info');
                 }
             }
         }
@@ -925,7 +943,9 @@
         }
 
         function openOBSWindow() {
-            const overlayUrl = document.getElementById('overlayUrl').value;
+            const overlayUrl = generateOBSUrl();
+            if (!overlayUrl) return;
+            
             obsWindow = window.open(overlayUrl, 'twitch-obs-overlay', 'width=1920,height=1080');
             if (obsWindow) {
                 addLog('🪟 Окно OBS открыто в новой вкладке', 'info');
@@ -955,15 +975,12 @@
                     timestamp: Date.now()
                 };
                 
-                // 1. localStorage (для OBS Browser Source)
                 localStorage.setItem('twitch_test_notification', JSON.stringify(notificationData));
                 
-                // 2. BroadcastChannel (для обычных вкладок)
                 if (state.broadcastChannel) {
                     state.broadcastChannel.postMessage(notificationData);
                 }
                 
-                // 3. postMessage (для окна через window.open)
                 if (obsWindow && !obsWindow.closed) {
                     try {
                         obsWindow.postMessage(notificationData, '*');
@@ -1251,16 +1268,47 @@
         }
 
         // ============ OVERLAY ============
-        function updateOverlayUrl() {
+        function generateOBSUrl() {
+            const token = state.accessToken || localStorage.getItem('twitch_access_token');
+            const channel = localStorage.getItem('twitch_channel') || state.userInfo?.login;
+            
+            if (!token || !channel) {
+                alert('Сначала авторизуйтесь и подключитесь к чату');
+                return null;
+            }
+            
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            document.getElementById('overlayUrl').value = baseUrl + '?overlay=true';
+            const obsUrl = `${baseUrl}?overlay=true&token=${encodeURIComponent(token)}&channel=${encodeURIComponent(channel)}`;
+            
+            return obsUrl;
         }
 
-        function copyOverlayUrl() {
-            const input = document.getElementById('overlayUrl');
-            input.select();
-            document.execCommand('copy');
-            alert('URL скопирован!');
+        function copyOBSUrlWithToken() {
+            const obsUrl = generateOBSUrl();
+            if (!obsUrl) return;
+            
+            navigator.clipboard.writeText(obsUrl).then(() => {
+                alert('URL скопирован! Вставьте его в OBS Browser Source');
+                addLog('🔗 URL с токеном скопирован', 'info');
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = obsUrl;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('URL скопирован! Вставьте его в OBS Browser Source');
+            });
+        }
+
+        function updateOverlayUrl() {
+            const obsUrlWithToken = generateOBSUrl();
+            if (obsUrlWithToken) {
+                const inputWithToken = document.getElementById('overlayUrlWithToken');
+                if (inputWithToken) {
+                    inputWithToken.value = obsUrlWithToken;
+                }
+            }
         }
 
         function saveOverlaySettings() {
@@ -1444,7 +1492,7 @@
                     } else if (data.achievements && Array.isArray(data.achievements)) {
                         achievementsToImport = data.achievements;
                     } else {
-                        throw new Error('Неверный формат файла. Ожидается массив ачивок или объект с полем achievements');
+                        throw new Error('Неверный формат файла');
                     }
                     
                     if (achievementsToImport.length === 0) {
@@ -1457,7 +1505,7 @@
                     });
                     
                     if (validAchievements.length === 0) {
-                        throw new Error('Не найдено валидных ачивок в файле');
+                        throw new Error('Не найдено валидных ачивок');
                     }
                     
                     validAchievements.forEach(ach => {
@@ -1476,8 +1524,8 @@
                     alert(`Успешно импортировано ${validAchievements.length} ачивок!`);
                     
                 } catch (err) {
-                    alert('Ошибка импорта ачивок: ' + err.message);
-                    addLog('❌ Ошибка импорта ачивок: ' + err.message, 'error');
+                    alert('Ошибка импорта: ' + err.message);
+                    addLog('❌ Ошибка импорта ачивок', 'error');
                 }
             };
             reader.readAsText(file);
