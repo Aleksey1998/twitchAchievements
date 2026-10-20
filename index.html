@@ -1,4 +1,19 @@
-<!DOCTYPE html>
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  background-color: white; /* Ensure the iframe has a white background */
+                }
+
+                
+              </style>
+                        </head>
+                        <body>
+                            <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -111,11 +126,11 @@
         .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
         .alert-warning { background: rgba(255, 165, 0, 0.15); border: 1px solid #ffa500; color: #ffa500; }
         .alert-info { background: rgba(145, 71, 255, 0.15); border: 1px solid #9147ff; color: #bf94ff; }
-        #overlayStatusPanel {font-family: 'Inter', sans-serif;}
-        #overlayStatusPanel .btn {font-size: 11px; padding: 6px 12px;}
-        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px;}
-        .status-indicator.status-connected {background: #00c853; box-shadow: 0 0 4px #00c853;}
-        .status-indicator.status-disconnected { background: #eb0400;}
+        #overlayStatusPanel { font-family: 'Inter', sans-serif; }
+        #overlayStatusPanel .btn { font-size: 12px; }
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+        .status-indicator.status-connected { background: #00c853; box-shadow: 0 0 4px #00c853; }
+        .status-indicator.status-disconnected { background: #eb0400; }
     </style>
 </head>
 <body>
@@ -285,6 +300,7 @@
 
             <div class="page" id="page-overlay">
                 <h2 class="page-title">OBS Оверлей</h2>
+                
                 <div class="connection-panel">
                     <h3>Настройка оверлея</h3>
                     <p style="font-size:13px;color:#adadb8;margin-bottom:16px;">
@@ -326,6 +342,26 @@
                     </div>
                     <button class="btn btn-primary" onclick="saveOverlaySettings()">Сохранить настройки</button>
                 </div>
+                
+                <!-- Панель статуса OBS -->
+                <div class="connection-panel" id="overlayStatusPanel">
+                    <h3>Статус подключения</h3>
+                    <div style="display:flex; gap:24px; margin-bottom:16px;">
+                        <div>
+                            <span style="color:#adadb8; font-size:12px;">Токен:</span>
+                            <div id="tokenStatusText" style="color:#eb0400; font-weight:600; margin-top:4px;">● Не получен</div>
+                        </div>
+                        <div>
+                            <span style="color:#adadb8; font-size:12px;">Чат:</span>
+                            <div id="chatStatus" style="color:#eb0400; font-weight:600; margin-top:4px;">● Отключен</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-primary btn-small" onclick="testOBSNotification()">🎯 Тест уведомления</button>
+                        <button class="btn btn-secondary btn-small" onclick="checkConnection()">🔄 Проверить подключение</button>
+                    </div>
+                </div>
+                
                 <h3 style="margin:24px 0 12px;">Предпросмотр уведомления</h3>
                 <div class="notification-preview-area" id="previewArea">
                     <button class="btn btn-secondary" onclick="showPreviewNotification()">Показать пример</button>
@@ -394,21 +430,6 @@
     </div>
 
     <div class="overlay-container" id="overlayContainer"></div>
-	
-	<!-- Панель статуса для режима оверлея -->
-	<div id="overlayStatusPanel" style="display:none; position:fixed; top:10px; right:10px; background:rgba(31, 31, 35, 0.95); border:1px solid #2f2f35; border-radius:8px; padding:12px; z-index:10000; font-size:12px; color:#efeff1;">
-		<div style="margin-bottom:8px; font-weight:600;">Статус OBS</div>
-		<div id="obsConnectionStatus" style="margin-bottom:8px;">
-			<span style="color:#adadb8;">Чат:</span> 
-			<span id="chatStatus" style="color:#eb0400;">● Отключен</span>
-		</div>
-		<div id="tokenStatus" style="margin-bottom:8px;">
-			<span style="color:#adadb8;">Токен:</span> 
-			<span id="tokenStatusText" style="color:#eb0400;">● Не получен</span>
-		</div>
-		<button class="btn btn-primary btn-small" onclick="testOBSNotification()" style="width:100%; margin-top:8px;">🎯 Тест уведомления</button>
-		<button class="btn btn-secondary btn-small" onclick="checkConnection()" style="width:100%; margin-top:4px;">🔄 Проверить подключение</button>
-	</div>
 
     <script>
         // ============ КОНФИГУРАЦИЯ ============
@@ -461,6 +482,7 @@
             }
             
             checkOverlayMode();
+            updateOverlayStatus();
         }
 
         // ============ КАНАЛЫ СВЯЗИ ============
@@ -616,140 +638,133 @@
             }
         }
 
-		function checkOverlayMode() {
-			const params = new URLSearchParams(window.location.search);
-			if (params.get('overlay') === 'true') {
-				document.getElementById('overlayContainer').classList.add('active');
-				
-				// Показываем панель статуса
-				const statusPanel = document.getElementById('overlayStatusPanel');
-				if (statusPanel) {
-					statusPanel.style.display = 'block';
-				}
-				
-				const tokenFromUrl = params.get('token');
-				const channelFromUrl = params.get('channel');
-				
-				// Обновляем статус токена
-				updateTokenStatus(tokenFromUrl);
-				
-				if (tokenFromUrl) {
-					state.accessToken = tokenFromUrl;
-					localStorage.setItem('twitch_access_token', tokenFromUrl);
-					
-					if (channelFromUrl) {
-						localStorage.setItem('twitch_channel', channelFromUrl);
-					}
-					
-					fetchUserInfo().then(() => {
-						if (state.userInfo) {
-							document.getElementById('dashboard').style.display = 'none';
-							const channel = channelFromUrl || localStorage.getItem('twitch_channel');
-							if (channel && !state.chatConnected) {
-								document.getElementById('channelName').value = channel;
-								setTimeout(() => connectChat(), 1000);
-							}
-						}
-					});
-				} else if (state.accessToken && state.userInfo) {
-					document.getElementById('dashboard').style.display = 'none';
-					const channel = localStorage.getItem('twitch_channel');
-					if (channel && !state.chatConnected) {
-						document.getElementById('channelName').value = channel;
-						setTimeout(() => connectChat(), 1000);
-					}
-				} else {
-					document.getElementById('dashboard').style.display = 'flex';
-					addLog('Войдите через Twitch для работы оверлея', 'info');
-				}
-				
-				// Запускаем периодическую проверку статуса
-				setInterval(updateConnectionStatus, 2000);
-			}
-		}
+        function checkOverlayMode() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('overlay') === 'true') {
+                document.getElementById('overlayContainer').classList.add('active');
+                
+                const tokenFromUrl = params.get('token');
+                const channelFromUrl = params.get('channel');
+                
+                updateTokenStatus(tokenFromUrl);
+                
+                if (tokenFromUrl) {
+                    state.accessToken = tokenFromUrl;
+                    localStorage.setItem('twitch_access_token', tokenFromUrl);
+                    
+                    if (channelFromUrl) {
+                        localStorage.setItem('twitch_channel', channelFromUrl);
+                    }
+                    
+                    fetchUserInfo().then(() => {
+                        if (state.userInfo) {
+                            document.getElementById('dashboard').style.display = 'none';
+                            const channel = channelFromUrl || localStorage.getItem('twitch_channel');
+                            if (channel && !state.chatConnected) {
+                                document.getElementById('channelName').value = channel;
+                                setTimeout(() => connectChat(), 1000);
+                            }
+                        }
+                    });
+                } else if (state.accessToken && state.userInfo) {
+                    document.getElementById('dashboard').style.display = 'none';
+                    const channel = localStorage.getItem('twitch_channel');
+                    if (channel && !state.chatConnected) {
+                        document.getElementById('channelName').value = channel;
+                        setTimeout(() => connectChat(), 1000);
+                    }
+                } else {
+                    document.getElementById('dashboard').style.display = 'flex';
+                    addLog('Войдите через Twitch для работы оверлея', 'info');
+                }
+                
+                setInterval(updateConnectionStatus, 2000);
+            }
+        }
 
-		// ============ ПРОВЕРКА СТАТУСА OBS ============
-		function updateTokenStatus(token) {
-			const tokenStatusText = document.getElementById('tokenStatusText');
-			if (tokenStatusText) {
-				if (token) {
-					tokenStatusText.innerHTML = '<span class="status-indicator status-connected"></span>Получен';
-					tokenStatusText.style.color = '#00c853';
-				} else {
-					tokenStatusText.innerHTML = '<span class="status-indicator status-disconnected"></span>Не получен';
-					tokenStatusText.style.color = '#eb0400';
-				}
-			}
-		}
+        // ============ ПРОВЕРКА СТАТУСА OBS ============
+        function updateOverlayStatus() {
+            const token = state.accessToken || localStorage.getItem('twitch_access_token');
+            updateTokenStatus(token);
+            updateConnectionStatus();
+        }
 
-		function updateConnectionStatus() {
-			const chatStatus = document.getElementById('chatStatus');
-			if (chatStatus) {
-				if (state.chatConnected) {
-					chatStatus.innerHTML = '<span class="status-indicator status-connected"></span>Подключен';
-					chatStatus.style.color = '#00c853';
-				} else {
-					chatStatus.innerHTML = '<span class="status-indicator status-disconnected"></span>Отключен';
-					chatStatus.style.color = '#eb0400';
-				}
-			}
-		}
+        function updateTokenStatus(token) {
+            const tokenStatusText = document.getElementById('tokenStatusText');
+            if (tokenStatusText) {
+                if (token) {
+                    tokenStatusText.innerHTML = '<span class="status-indicator status-connected"></span>Получен';
+                    tokenStatusText.style.color = '#00c853';
+                } else {
+                    tokenStatusText.innerHTML = '<span class="status-indicator status-disconnected"></span>Не получен';
+                    tokenStatusText.style.color = '#eb0400';
+                }
+            }
+        }
 
-		function checkConnection() {
-			addLog('🔄 Проверка подключения...', 'info');
-			
-			// Проверяем токен
-			const token = state.accessToken || localStorage.getItem('twitch_access_token');
-			if (!token) {
-				addLog('❌ Токен не найден', 'error');
-				alert('Ошибка: Токен авторизации не найден. Скопируйте URL с токеном из основной страницы.');
-				return;
-			}
-			
-			// Проверяем канал
-			const channel = localStorage.getItem('twitch_channel');
-			if (!channel) {
-				addLog('❌ Канал не указан', 'error');
-				alert('Ошибка: Канал не указан.');
-				return;
-			}
-			
-			// Проверяем подключение к чату
-			if (state.chatConnected) {
-				addLog('✅ Подключение к чату активно', 'info');
-				alert('✅ Статус:\n• Токен: получен\n• Канал: ' + channel + '\n• Чат: подключен');
-			} else {
-				addLog('⚠️ Чат не подключен, пытаемся переподключиться...', 'info');
-				alert('⚠️ Статус:\n• Токен: получен\n• Канал: ' + channel + '\n• Чат: отключен\n\nПытаемся переподключиться...');
-				
-				// Пытаемся переподключиться
-				if (state.ws) {
-					state.ws.close();
-				}
-				setTimeout(() => connectChat(), 1000);
-			}
-			
-			updateConnectionStatus();
-		}
+        function updateConnectionStatus() {
+            const chatStatus = document.getElementById('chatStatus');
+            if (chatStatus) {
+                if (state.chatConnected) {
+                    chatStatus.innerHTML = '<span class="status-indicator status-connected"></span>Подключен';
+                    chatStatus.style.color = '#00c853';
+                } else {
+                    chatStatus.innerHTML = '<span class="status-indicator status-disconnected"></span>Отключен';
+                    chatStatus.style.color = '#eb0400';
+                }
+            }
+        }
 
-		function testOBSNotification() {
-			addLog('🎯 Отправка тестового уведомления...', 'info');
-			
-			// Проверяем подключение
-			if (!state.chatConnected) {
-				addLog('⚠️ Чат не подключен, уведомление все равно будет показано', 'info');
-			}
-			
-			const testAchievement = {
-				name: 'Тестовое уведомление OBS',
-				icon: '🎯',
-				color: state.overlaySettings.borderColor || '#9147ff'
-			};
-			
-			showNotification('TestUser', testAchievement);
-			addLog('✅ Тестовое уведомление отправлено', 'info');
-		}
-		
+        function checkConnection() {
+            addLog('🔄 Проверка подключения...', 'info');
+            
+            const token = state.accessToken || localStorage.getItem('twitch_access_token');
+            if (!token) {
+                addLog('❌ Токен не найден', 'error');
+                alert('Ошибка: Токен авторизации не найден. Скопируйте URL с токеном из основной страницы.');
+                return;
+            }
+            
+            const channel = localStorage.getItem('twitch_channel');
+            if (!channel) {
+                addLog('❌ Канал не указан', 'error');
+                alert('Ошибка: Канал не указан.');
+                return;
+            }
+            
+            if (state.chatConnected) {
+                addLog('✅ Подключение к чату активно', 'info');
+                alert('✅ Статус:\n• Токен: получен\n• Канал: ' + channel + '\n• Чат: подключен');
+            } else {
+                addLog('⚠️ Чат не подключен, пытаемся переподключиться...', 'info');
+                alert('⚠️ Статус:\n• Токен: получен\n• Канал: ' + channel + '\n• Чат: отключен\n\nПытаемся переподключиться...');
+                
+                if (state.ws) {
+                    state.ws.close();
+                }
+                setTimeout(() => connectChat(), 1000);
+            }
+            
+            updateConnectionStatus();
+        }
+
+        function testOBSNotification() {
+            addLog('🎯 Отправка тестового уведомления...', 'info');
+            
+            if (!state.chatConnected) {
+                addLog('⚠️ Чат не подключен, уведомление все равно будет показано', 'info');
+            }
+            
+            const testAchievement = {
+                name: 'Тестовое уведомление OBS',
+                icon: '🎯',
+                color: state.overlaySettings.borderColor || '#9147ff'
+            };
+            
+            showNotification('TestUser', testAchievement);
+            addLog('✅ Тестовое уведомление отправлено', 'info');
+        }
+        
         function logout() {
             state.accessToken = null;
             state.userInfo = null;
@@ -794,7 +809,7 @@
                     }
                 };
                 
-                 state.ws.onmessage = (event) => {
+                state.ws.onmessage = (event) => {
                     const lines = event.data.split('\r\n');
                     lines.forEach(line => {
                         if (!line) return;
@@ -1470,6 +1485,10 @@
                     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                     item.classList.add('active');
                     document.getElementById('page-' + item.dataset.page).classList.add('active');
+                    
+                    if (item.dataset.page === 'overlay') {
+                        updateOverlayStatus();
+                    }
                 });
             });
         }
@@ -1654,3 +1673,49 @@
     </script>
 </body>
 </html>
+<div class="page" id="page-overlay">
+    <h2>OBS Оверлей</h2>
+    <div class="connection-panel">
+        <h3>Настройка оверлея</h3>
+        ...
+    </div>
+    <div class="connection-panel" id="overlayStatusPanel">
+        ...
+    </div>
+    
+    <div class="connection-panel">
+        <h3>Настройка оверлея</h3>  <!-- ← ДУБЛИРУЮЩИЙСЯ ЗАГОЛОВОК! -->
+    <h3>Предпросмотр уведомления</h3>  <!-- ← ВНУТРИ connection-panel! -->
+    <div class="notification-preview-area">
+        ...
+    </div>
+    <div>  <!-- ← КНОПКИ ВНУТРИ connection-panel! -->
+        ...
+    </div>
+</div>  <!-- ← Только ОДНА закрывающая скобка для двух открытых! -->
+
+
+              <script>
+                              function checkOverlayMode() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('overlay') === 'true') {
+        document.getElementById('overlayContainer').classList.add('active');
+        
+        const tokenFromUrl = params.get('token');
+        const channelFromUrl = params.get('channel');
+
+        function setupNavigation() {  // ← ВНУТРИ checkOverlayMode!
+            ...
+        }
+
+function checkOverlayMode() {
+    ...
+    function updateOverlayStatus() {  // ← ВНУТРИ checkOverlayMode!
+        ...
+    }
+
+
+              </script>
+                        </body>
+                        </html>
+                    
