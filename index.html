@@ -10,112 +10,28 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0e0e10;
-            color: #efeff1;
-            min-height: 100vh;
-        }
+        body { font-family: 'Inter', sans-serif; background: #0e0e10; color: #efeff1; min-height: 100vh; }
         .app-container { display: flex; min-height: 100vh; }
-        .sidebar {
-            width: 260px;
-            background: #18181b;
-            border-right: 1px solid #2f2f35;
-            padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-        }
-        .sidebar-logo {
-            padding: 0 20px 20px;
-            border-bottom: 1px solid #2f2f35;
-            margin-bottom: 10px;
-        }
-        .sidebar-logo h1 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #9147ff;
-        }
+        .sidebar { width: 260px; background: #18181b; border-right: 1px solid #2f2f35; padding: 20px 0; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid #2f2f35; margin-bottom: 10px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 700; color: #9147ff; }
         .sidebar-logo p { font-size: 12px; color: #adadb8; margin-top: 4px; }
-        .nav-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-            font-size: 14px;
-        }
+        .nav-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; border-left: 3px solid transparent; font-size: 14px; }
         .nav-item:hover { background: #1f1f23; }
-        .nav-item.active {
-            background: #1f1f23;
-            border-left-color: #9147ff;
-            color: #fff;
-        }
+        .nav-item.active { background: #1f1f23; border-left-color: #9147ff; color: #fff; }
         .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-            max-height: 100vh;
-        }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; max-height: 100vh; }
         .page { display: none; }
         .page.active { display: block; }
-        .page-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
-        .connection-panel {
-            background: #1f1f23;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            border: 1px solid #2f2f35;
-        }
+        .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+        .connection-panel { background: #1f1f23; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #2f2f35; }
         .connection-panel h3 { margin-bottom: 16px; font-size: 16px; }
-        .form-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-            align-items: end;
-        }
+        .form-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: end; }
         .form-group { flex: 1; }
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            color: #adadb8;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px 14px;
-            background: #0e0e10;
-            border: 1px solid #2f2f35;
-            border-radius: 8px;
-            color: #efeff1;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #9147ff;
-        }
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            white-space: nowrap;
-        }
+        .form-group label { display: block; font-size: 12px; color: #adadb8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 14px; background: #0e0e10; border: 1px solid #2f2f35; border-radius: 8px; color: #efeff1; font-size: 14px; font-family: inherit; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #9147ff; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap; }
         .btn-primary { background: #9147ff; color: #fff; }
         .btn-primary:hover { background: #772ce8; }
         .btn-danger { background: #eb0400; color: #fff; }
@@ -125,252 +41,58 @@
         .btn-success { background: #00c853; color: #fff; }
         .btn-success:hover { background: #00a844; }
         .btn-small { padding: 6px 12px; font-size: 12px; }
-        .btn-twitch {
-            background: #9147ff;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-            width: 100%;
-            padding: 14px;
-            font-size: 16px;
-        }
+        .btn-twitch { background: #9147ff; color: #fff; display: flex; align-items: center; gap: 8px; justify-content: center; width: 100%; padding: 14px; font-size: 16px; }
         .btn-twitch:hover { background: #772ce8; }
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-connected { background: rgba(0, 200, 83, 0.15); color: #00c853; }
         .status-disconnected { background: rgba(235, 4, 0, 0.15); color: #eb0400; }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
         .status-connected .status-dot { animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: #1f1f23;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #2f2f35;
-        }
-        .stat-card .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #9147ff;
-        }
-        .stat-card .stat-label {
-            font-size: 12px;
-            color: #adadb8;
-            margin-top: 4px;
-            text-transform: uppercase;
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #1f1f23; border-radius: 12px; padding: 20px; border: 1px solid #2f2f35; }
+        .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #9147ff; }
+        .stat-card .stat-label { font-size: 12px; color: #adadb8; margin-top: 4px; text-transform: uppercase; }
         .achievements-list { display: flex; flex-direction: column; gap: 12px; }
-        .achievement-card {
-            background: #1f1f23;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #2f2f35;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.2s;
-        }
+        .achievement-card { background: #1f1f23; border-radius: 12px; padding: 20px; border: 1px solid #2f2f35; display: flex; align-items: center; gap: 16px; transition: all 0.2s; }
         .achievement-card:hover { border-color: #9147ff; }
-        .achievement-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
+        .achievement-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
         .achievement-info { flex: 1; }
         .achievement-info h4 { font-size: 14px; margin-bottom: 4px; }
         .achievement-info p { font-size: 12px; color: #adadb8; }
         .achievement-actions { display: flex; gap: 8px; }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
-        .modal {
-            background: #1f1f23;
-            border-radius: 16px;
-            padding: 32px;
-            width: 90%;
-            max-width: 560px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid #2f2f35;
-        }
+        .modal { background: #1f1f23; border-radius: 16px; padding: 32px; width: 90%; max-width: 560px; max-height: 80vh; overflow-y: auto; border: 1px solid #2f2f35; }
         .modal h2 { margin-bottom: 20px; font-size: 20px; }
         .modal .form-group { margin-bottom: 16px; }
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-        .condition-builder {
-            background: #0e0e10;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 8px;
-        }
-        .condition-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .condition-row select, .condition-row input {
-            padding: 8px 12px;
-            background: #1f1f23;
-            border: 1px solid #2f2f35;
-            border-radius: 6px;
-            color: #efeff1;
-            font-size: 13px;
-            font-family: inherit;
-        }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+        .condition-builder { background: #0e0e10; border-radius: 8px; padding: 16px; margin-top: 8px; }
+        .condition-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .condition-row select, .condition-row input { padding: 8px 12px; background: #1f1f23; border: 1px solid #2f2f35; border-radius: 6px; color: #efeff1; font-size: 13px; font-family: inherit; }
         .condition-row select { min-width: 140px; }
         .condition-row input { flex: 1; min-width: 80px; }
-        .chat-log {
-            background: #1f1f23;
-            border-radius: 12px;
-            border: 1px solid #2f2f35;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 12px;
-        }
-        .chat-message {
-            padding: 6px 0;
-            font-size: 13px;
-            border-bottom: 1px solid #2f2f35;
-        }
+        .chat-log { background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; max-height: 400px; overflow-y: auto; padding: 12px; }
+        .chat-message { padding: 6px 0; font-size: 13px; border-bottom: 1px solid #2f2f35; }
         .chat-message:last-child { border-bottom: none; }
         .chat-username { font-weight: 600; margin-right: 8px; }
         .chat-time { color: #adadb8; font-size: 11px; margin-right: 8px; }
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #1f1f23;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #2f2f35;
-        }
-        .users-table th, .users-table td {
-            padding: 12px 16px;
-            text-align: left;
-            font-size: 13px;
-        }
-        .users-table th {
-            background: #0e0e10;
-            font-weight: 600;
-            color: #adadb8;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-        }
+        .users-table { width: 100%; border-collapse: collapse; background: #1f1f23; border-radius: 12px; overflow: hidden; border: 1px solid #2f2f35; }
+        .users-table th, .users-table td { padding: 12px 16px; text-align: left; font-size: 13px; }
+        .users-table th { background: #0e0e10; font-weight: 600; color: #adadb8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
         .users-table tr { border-bottom: 1px solid #2f2f35; }
         .users-table tr:last-child { border-bottom: none; }
-        .notification-preview-area {
-            background: #1f1f23;
-            border-radius: 12px;
-            border: 1px solid #2f2f35;
-            padding: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 200px;
-        }
-        .overlay-container {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: transparent;
-            pointer-events: none;
-            z-index: 9999;
-        }
+        .notification-preview-area { background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; padding: 40px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
+        .overlay-container { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; pointer-events: none; z-index: 9999; }
         .overlay-container.active { display: block; }
-        .overlay-notification {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            opacity: 0;
-            background: linear-gradient(135deg, #1f1f23 0%, #2d1b69 100%);
-            border: 2px solid #9147ff;
-            border-radius: 16px;
-            padding: 20px 32px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 8px 32px rgba(145, 71, 255, 0.3);
-            animation: slideUp 0.5s ease forwards, slideDown 0.5s ease 5s forwards;
-            pointer-events: none;
-        }
-        @keyframes slideUp {
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-        @keyframes slideDown {
-            to { transform: translateX(-50%) translateY(100px); opacity: 0; }
-        }
-        .overlay-notification .notif-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #9147ff, #bf94ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-        }
-        .overlay-notification .notif-text h3 {
-            font-size: 14px;
-            color: #bf94ff;
-            margin-bottom: 4px;
-        }
-        .overlay-notification .notif-text p {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .overlay-notification .notif-text .notif-user {
-            color: #9147ff;
-        }
-        .log-area {
-            background: #0e0e10;
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-size: 12px;
-            font-family: monospace;
-        }
+        .overlay-notification { position: fixed; background: linear-gradient(135deg, #1f1f23 0%, #2d1b69 100%); border: 2px solid #9147ff; border-radius: 16px; padding: 20px 32px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(145, 71, 255, 0.3); animation: slideUp 0.5s ease forwards, slideDown 0.5s ease 5s forwards; pointer-events: none; }
+        @keyframes slideUp { to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes slideDown { to { transform: translateX(-50%) translateY(100px); opacity: 0; } }
+        .overlay-notification .notif-icon { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #9147ff, #bf94ff); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .overlay-notification .notif-text h3 { font-size: 14px; color: #bf94ff; margin-bottom: 4px; }
+        .overlay-notification .notif-text p { font-size: 18px; font-weight: 700; }
+        .overlay-notification .notif-text .notif-user { color: #9147ff; }
+        .log-area { background: #0e0e10; border-radius: 8px; padding: 12px; max-height: 400px; overflow-y: auto; font-size: 12px; font-family: monospace; }
         .log-entry { padding: 4px 0; border-bottom: 1px solid #1f1f23; }
         .log-entry.achievement { color: #9147ff; }
         .log-entry.info { color: #adadb8; }
@@ -379,58 +101,20 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #2f2f35; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-        @media (max-width: 768px) {
-            .sidebar { width: 60px; }
-            .sidebar-logo h1, .sidebar-logo p, .nav-item span { display: none; }
-            .nav-item { justify-content: center; padding: 12px; }
-            .form-row { flex-direction: column; }
-        }
-        .preset-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .preset-chip {
-            padding: 6px 12px;
-            background: #2f2f35;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .preset-chip:hover { background: #9147ff; }
-        .tab-bar {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 20px;
-            background: #1f1f23;
-            border-radius: 10px;
-            padding: 4px;
-        }
-        .tab-item {
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .tab-item.active { background: #9147ff; }
-        .tab-item:hover:not(.active) { background: #2f2f35; }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid #9147ff;
-        }
+        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .user-avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #9147ff; }
         .user-details h3 { font-size: 16px; }
         .user-details p { font-size: 12px; color: #adadb8; }
+        .preset-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .preset-chip { padding: 6px 12px; background: #2f2f35; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .preset-chip:hover { background: #9147ff; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: #1f1f23; border-radius: 10px; padding: 4px; }
+        .tab-item { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .tab-item.active { background: #9147ff; }
+        .tab-item:hover:not(.active) { background: #2f2f35; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+        .alert-warning { background: rgba(255, 165, 0, 0.15); border: 1px solid #ffa500; color: #ffa500; }
+        .alert-info { background: rgba(145, 71, 255, 0.15); border: 1px solid #9147ff; color: #bf94ff; }
     </style>
 </head>
 <body>
@@ -475,6 +159,9 @@
                     <p style="font-size:13px;color:#adadb8;margin-bottom:20px;">
                         Войдите через Twitch для отслеживания активности в чате и получения ачивок.
                     </p>
+                    <div class="alert alert-warning">
+                        ⚠️ Приложение должно быть запущено через локальный сервер на <b>https://localhost:8080/</b> или размещено на хостинге с HTTPS.
+                    </div>
                     <button class="btn btn-twitch" onclick="loginWithTwitch()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
@@ -494,7 +181,7 @@
                         </div>
                         <span class="status-badge status-connected" id="connectionStatus">
                             <span class="status-dot"></span>
-                            Подключено
+                            Авторизован
                         </span>
                     </div>
                     <div class="form-row">
@@ -532,28 +219,25 @@
                     <h2 class="page-title" style="margin-bottom:0;">Ачивки</h2>
                     <button class="btn btn-primary" onclick="openAchievementModal()">+ Новая ачивка</button>
                 </div>
-
                 <div class="tab-bar">
                     <div class="tab-item active" data-filter="all">Все</div>
                     <div class="tab-item" data-filter="active">Активные</div>
                     <div class="tab-item" data-filter="disabled">Отключённые</div>
                 </div>
-
                 <div class="achievements-list" id="achievementsList"></div>
-
                 <div style="margin-top:24px;">
                     <h3 style="margin-bottom:12px;">Быстрые пресеты</h3>
                     <div class="preset-chips">
                         <div class="preset-chip" onclick="addPreset('first_message')">🎉 Первое сообщение</div>
                         <div class="preset-chip" onclick="addPreset('100_messages')">💬 100 сообщений</div>
                         <div class="preset-chip" onclick="addPreset('1000_messages')">🔥 1000 сообщений</div>
-                        <div class="preset-chip" onclick="addPreset('spam_100')">⚡ 100 сообщений за 5 мин</div>
+                        <div class="preset-chip" onclick="addPreset('spam_100')">⚡ 100 сообщ. за 5 мин</div>
                         <div class="preset-chip" onclick="addPreset('night_owl')">🦉 Ночная сова</div>
                         <div class="preset-chip" onclick="addPreset('early_bird')">🐦 Ранняя пташка</div>
                         <div class="preset-chip" onclick="addPreset('emote_spam')">😂 Спам эмодзи</div>
                         <div class="preset-chip" onclick="addPreset('caps_master')">📢 Крик</div>
-                        <div class="preset-chip" onclick="addPreset('sub_gift')">🎁 Даритель</div>
                         <div class="preset-chip" onclick="addPreset('bits_100')">💎 100 бит</div>
+                        <div class="preset-chip" onclick="addPreset('long_message')">📝 Длинное сообщение</div>
                     </div>
                 </div>
             </div>
@@ -566,14 +250,14 @@
                     </div>
                 </div>
                 <div style="overflow-x:auto;">
-                    <table class="users-table" id="usersTable">
+                    <table class="users-table">
                         <thead>
                             <tr>
                                 <th>Пользователь</th>
                                 <th>Сообщений</th>
                                 <th>Ачивок</th>
                                 <th>Биты</th>
-                                <th>Подписки</th>
+                                <th>Первое сообщение</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody"></tbody>
@@ -593,7 +277,7 @@
                 <div class="connection-panel">
                     <h3>Настройка оверлея</h3>
                     <p style="font-size:13px;color:#adadb8;margin-bottom:16px;">
-                        Добавьте браузерный источник в OBS с URL ниже для отображения уведомлений об ачивках.
+                        Добавьте браузерный источник в OBS с URL ниже для отображения уведомлений.
                     </p>
                     <div class="form-group" style="margin-bottom:16px;">
                         <label>URL для OBS Browser Source</label>
@@ -624,14 +308,9 @@
                             <label>Цвет рамки</label>
                             <input type="color" id="overlayBorderColor" value="#9147ff">
                         </div>
-                        <div class="form-group">
-                            <label>Размер шрифта</label>
-                            <input type="number" id="overlayFontSize" value="18" min="12" max="36">
-                        </div>
                     </div>
                     <button class="btn btn-primary" onclick="saveOverlaySettings()">Сохранить настройки</button>
                 </div>
-
                 <h3 style="margin:24px 0 12px;">Предпросмотр уведомления</h3>
                 <div class="notification-preview-area" id="previewArea">
                     <button class="btn btn-secondary" onclick="showPreviewNotification()">Показать пример</button>
@@ -669,7 +348,7 @@
             </div>
             <div class="form-group">
                 <label>Условия</label>
-                <div class="condition-builder" id="conditionBuilder">
+                <div class="condition-builder">
                     <div id="conditionsList"></div>
                     <button class="btn btn-secondary btn-small" onclick="addConditionRow()" style="margin-top:8px;">+ Добавить условие</button>
                 </div>
@@ -685,7 +364,7 @@
                 <label>Повторяемая</label>
                 <select id="achRepeatable">
                     <option value="false">Нет (один раз)</option>
-                    <option value="true">Да (можно получать повторно)</option>
+                    <option value="true">Да (можно повторно)</option>
                 </select>
             </div>
             <div class="modal-actions">
@@ -698,10 +377,12 @@
     <div class="overlay-container" id="overlayContainer"></div>
 
     <script>
+        // ============ КОНФИГУРАЦИЯ ============
         const CLIENT_ID = 'eyc4k9sznnh9hvi6tg097fvqx9pa9b';
-        const REDIRECT_URI = 'https://aleksey1998.github.io/twitchAchievements/';
-        const SCOPES = 'chat:read chat:edit channel:read:subscriptions bits:read channel:read:raids moderator:read:chatters channel:moderate';
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+        const SCOPES = 'chat:read user:read:chat channel:read:subscriptions bits:read moderation:read channel:moderate';
 
+        // ============ СОСТОЯНИЕ ============
         let state = {
             connected: false,
             chatConnected: false,
@@ -717,14 +398,13 @@
             overlaySettings: {
                 position: 'bottom-center',
                 duration: 6,
-                borderColor: '#9147ff',
-                fontSize: 18
+                borderColor: '#9147ff'
             },
             editingAchievementId: null
         };
 
+        // ============ ИНИЦИАЛИЗАЦИЯ ============
         function init() {
-            checkAuthCallback();
             loadState();
             renderAchievements();
             renderUsers();
@@ -732,31 +412,707 @@
             setupNavigation();
             setupTabs();
             startUptimeTimer();
+            checkAuthCallback();
             checkOverlayMode();
+        }
+
+        function checkOverlayMode() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('overlay') === 'true') {
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('overlayContainer').classList.add('active');
+                if (state.accessToken) {
+                    const channel = localStorage.getItem('twitch_channel');
+                    if (channel) {
+                        document.getElementById('channelName').value = channel;
+                        setTimeout(toggleChatConnection, 1000);
+                    }
+                }
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('twitch_achievements');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    state.achievements = data.achievements || [];
+                    state.overlaySettings = data.overlaySettings || state.overlaySettings;
+                    state.users = data.users || {};
+                    state.stats = data.stats || state.stats;
+                }
+                const channel = localStorage.getItem('twitch_channel');
+                if (channel) document.getElementById('channelName').value = channel;
+                document.getElementById('overlayPosition').value = state.overlaySettings.position;
+                document.getElementById('overlayDuration').value = state.overlaySettings.duration;
+                document.getElementById('overlayBorderColor').value = state.overlaySettings.borderColor;
+            } catch(e) { console.error('Load error:', e); }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('twitch_achievements', JSON.stringify({
+                    achievements: state.achievements,
+                    overlaySettings: state.overlaySettings,
+                    users: state.users,
+                    stats: state.stats
+                }));
+            } catch(e) { console.error('Save error:', e); }
+        }
+
+        // ============ АВТОРИЗАЦИЯ ============
+        function loginWithTwitch() {
+            const scope = encodeURIComponent(SCOPES);
+            const redirectUri = encodeURIComponent(REDIRECT_URI);
+            const authUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}`;
+            window.location.href = authUrl;
         }
 
         function checkAuthCallback() {
             const hash = window.location.hash;
-            if (hash) {
+            if (hash && hash.includes('access_token')) {
                 const params = new URLSearchParams(hash.substring(1));
                 const accessToken = params.get('access_token');
-                const tokenType = params.get('token_type');
-                
-                if (accessToken && tokenType === 'bearer') {
+                if (accessToken) {
                     state.accessToken = accessToken;
                     localStorage.setItem('twitch_access_token', accessToken);
-                    window.location.hash = '';
+                    window.history.replaceState({}, document.title, window.location.pathname);
                     fetchUserInfo();
+                    return;
                 }
-            } else {
-                const savedToken = localStorage.getItem('twitch_access_token');
-                if (savedToken) {
-                    state.accessToken = savedToken;
-                    fetchUserInfo();
-                }
+            }
+            const savedToken = localStorage.getItem('twitch_access_token');
+            if (savedToken) {
+                state.accessToken = savedToken;
+                fetchUserInfo();
             }
         }
 
         async function fetchUserInfo() {
             try {
-                const response = await fetch('https://api.twitch
+                const response = await fetch('https://api.twitch.tv/helix/users', {
+                    headers: {
+                        'Authorization': `Bearer ${state.accessToken}`,
+                        'Client-Id': CLIENT_ID
+                    }
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('twitch_access_token');
+                        state.accessToken = null;
+                        addLog('Токен истёк, войдите заново', 'error');
+                        return;
+                    }
+                    throw new Error('Failed to fetch user info');
+                }
+                const data = await response.json();
+                if (data.data && data.data[0]) {
+                    state.userInfo = data.data[0];
+                    showConnectedPanel();
+                    addLog(`Авторизован как ${state.userInfo.display_name}`, 'info');
+                }
+            } catch(e) {
+                console.error('Fetch user error:', e);
+                addLog('Ошибка получения информации о пользователе', 'error');
+            }
+        }
+
+        function showConnectedPanel() {
+            if (!state.userInfo) return;
+            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('connectedPanel').style.display = 'block';
+            document.getElementById('userName').textContent = state.userInfo.display_name;
+            document.getElementById('userLogin').textContent = '@' + state.userInfo.login;
+            document.getElementById('userAvatar').src = state.userInfo.profile_image_url;
+            if (!document.getElementById('channelName').value) {
+                document.getElementById('channelName').value = state.userInfo.login;
+            }
+        }
+
+        function logout() {
+            state.accessToken = null;
+            state.userInfo = null;
+            localStorage.removeItem('twitch_access_token');
+            if (state.client) {
+                state.client.disconnect();
+                state.client = null;
+            }
+            state.chatConnected = false;
+            document.getElementById('loginPanel').style.display = 'block';
+            document.getElementById('connectedPanel').style.display = 'none';
+            addLog('Вы вышли из аккаунта', 'info');
+        }
+
+        // ============ ПОДКЛЮЧЕНИЕ К ЧАТУ ============
+        function toggleChatConnection() {
+            if (state.chatConnected) {
+                disconnectChat();
+            } else {
+                connectChat();
+            }
+        }
+
+        function connectChat() {
+            if (!state.accessToken) {
+                alert('Сначала авторизуйтесь через Twitch');
+                return;
+            }
+            const channel = document.getElementById('channelName').value.trim().toLowerCase();
+            if (!channel) {
+                alert('Введите имя канала');
+                return;
+            }
+            localStorage.setItem('twitch_channel', channel);
+
+            const opts = {
+                channels: [channel],
+                connection: { reconnect: true, secure: true },
+                identity: {
+                    username: state.userInfo.login,
+                    password: `oauth:${state.accessToken}`
+                }
+            };
+
+            try {
+                state.client = new tmi.client(opts);
+                state.client.on('message', onMessage);
+                state.client.on('connected', onChatConnected);
+                state.client.on('disconnected', onChatDisconnected);
+                state.client.connect();
+            } catch(e) {
+                addLog('Ошибка подключения: ' + e.message, 'error');
+            }
+        }
+
+        function disconnectChat() {
+            if (state.client) {
+                state.client.disconnect();
+            }
+        }
+
+        function onChatConnected() {
+            state.chatConnected = true;
+            state.startTime = Date.now();
+            addLog('Подключено к чату', 'info');
+            document.getElementById('connectBtn').textContent = 'Отключиться';
+            document.getElementById('connectBtn').className = 'btn btn-danger';
+        }
+
+        function onChatDisconnected(reason) {
+            state.chatConnected = false;
+            addLog('Отключено от чата: ' + (reason || 'неизвестно'), 'error');
+            document.getElementById('connectBtn').textContent = 'Подключиться к чату';
+            document.getElementById('connectBtn').className = 'btn btn-primary';
+        }
+
+        // ============ ОБРАБОТКА СОБЫТИЙ ЧАТА ============
+        function onMessage(channel, tags, message, self) {
+            if (self) return;
+            const username = tags['display-name'] || tags.username;
+            const userId = tags.username;
+            const now = Date.now();
+
+            if (!state.users[userId]) {
+                state.users[userId] = {
+                    name: username,
+                    messages: 0,
+                    firstMessage: now,
+                    lastMessage: now,
+                    achievements: [],
+                    messageTimestamps: [],
+                    emoteCount: 0,
+                    capsMessages: 0,
+                    bits: 0,
+                    subs: 0
+                };
+            }
+
+            const user = state.users[userId];
+            user.messages++;
+            user.lastMessage = now;
+            user.messageTimestamps.push(now);
+            user.name = username;
+
+            const tenMinAgo = now - 600000;
+            user.messageTimestamps = user.messageTimestamps.filter(t => t > tenMinAgo);
+
+            if (message.length > 10 && message === message.toUpperCase()) {
+                user.capsMessages++;
+            }
+
+            if (tags.emotes) {
+                user.emoteCount += Object.keys(tags.emotes).length;
+            }
+
+            state.stats.messages++;
+            document.getElementById('statMessages').textContent = state.stats.messages;
+            document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+
+            addChatMessage(username, message, tags.color || '#9147ff');
+            checkAchievements(userId, user, message, tags);
+            saveState();
+        }
+
+        // ============ ПРОВЕРКА АЧИВОК ============
+        function checkAchievements(userId, user, message, tags) {
+            state.achievements.forEach(ach => {
+                if (!ach.enabled) return;
+                if (!ach.repeatable && user.achievements.includes(ach.id)) return;
+                if (evaluateConditions(ach.conditions, ach.logic, user, message, tags)) {
+                    awardAchievement(userId, user, ach);
+                }
+            });
+        }
+
+        function evaluateConditions(conditions, logic, user, message, tags) {
+            if (!conditions || conditions.length === 0) return false;
+            const results = conditions.map(c => evaluateSingleCondition(c, user, message, tags));
+            return logic === 'AND' ? results.every(r => r) : results.some(r => r);
+        }
+
+        function evaluateSingleCondition(cond, user, message, tags) {
+            const value = parseFloat(cond.value) || 0;
+            switch(cond.type) {
+                case 'messages_total': return user.messages >= value;
+                case 'messages_in_time':
+                    const timeMs = (parseFloat(cond.timeWindow) || 5) * 60 * 1000;
+                    const recentMsgs = user.messageTimestamps.filter(t => t > Date.now() - timeMs);
+                    return recentMsgs.length >= value;
+                case 'first_message': return user.messages === 1;
+                case 'contains_word': return message.toLowerCase().includes(cond.value.toLowerCase());
+                case 'caps_message': return user.capsMessages >= value;
+                case 'emote_count': return user.emoteCount >= value;
+                case 'bits_total': return user.bits >= value;
+                case 'subs_total': return user.subs >= value;
+                case 'message_length': return message.length >= value;
+                case 'time_of_day':
+                    const hour = new Date().getHours();
+                    if (cond.timeModifier === 'night') return hour >= 22 || hour < 6;
+                    if (cond.timeModifier === 'morning') return hour >= 5 && hour < 10;
+                    if (cond.timeModifier === 'evening') return hour >= 18 && hour < 22;
+                    return hour === parseInt(cond.value);
+                case 'messages_exact': return user.messages === value;
+                case 'word_count': return message.split(/\s+/).length >= value;
+                default: return false;
+            }
+        }
+
+        function awardAchievement(userId, user, ach) {
+            if (!user.achievements.includes(ach.id)) {
+                user.achievements.push(ach.id);
+            }
+            state.stats.achievementsGiven++;
+            document.getElementById('statAchievements').textContent = state.stats.achievementsGiven;
+            addLog(`🏆 ${user.name} получил ачивку "${ach.name}"!`, 'achievement');
+            showNotification(user.name, ach);
+            saveState();
+        }
+
+        // ============ УВЕДОМЛЕНИЯ ============
+        function showNotification(username, achievement) {
+            const container = document.getElementById('overlayContainer');
+            const duration = state.overlaySettings.duration || 6;
+            const notif = document.createElement('div');
+            notif.className = 'overlay-notification';
+            notif.style.animationDelay = `0s, ${duration}s`;
+            notif.style.borderColor = state.overlaySettings.borderColor;
+            notif.innerHTML = `
+                <div class="notif-icon" style="background:linear-gradient(135deg, ${achievement.color || '#9147ff'}, ${lightenColor(achievement.color || '#9147ff', 40)})">${achievement.icon || '🏆'}</div>
+                <div class="notif-text">
+                    <h3>НОВАЯ АЧИВКА!</h3>
+                    <p><span class="notif-user">${username}</span> — ${achievement.name}</p>
+                </div>
+            `;
+            applyPosition(notif);
+            container.appendChild(notif);
+            setTimeout(() => { if (notif.parentNode) notif.remove(); }, (duration + 1) * 1000);
+            showInPreview(username, achievement);
+        }
+
+        function applyPosition(element) {
+            const pos = state.overlaySettings.position;
+            element.style.bottom = ''; element.style.top = '';
+            element.style.left = ''; element.style.right = '';
+            element.style.transform = '';
+            switch(pos) {
+                case 'bottom-center':
+                    element.style.bottom = '40px'; element.style.left = '50%';
+                    element.style.transform = 'translateX(-50%) translateY(100px)'; break;
+                case 'top-center':
+                    element.style.top = '40px'; element.style.left = '50%';
+                    element.style.transform = 'translateX(-50%) translateY(-100px)'; break;
+                case 'bottom-left':
+                    element.style.bottom = '40px'; element.style.left = '40px';
+                    element.style.transform = 'translateX(-100px)'; break;
+                case 'bottom-right':
+                    element.style.bottom = '40px'; element.style.right = '40px';
+                    element.style.transform = 'translateX(100px)'; break;
+                case 'top-left':
+                    element.style.top = '40px'; element.style.left = '40px';
+                    element.style.transform = 'translateX(-100px)'; break;
+                case 'top-right':
+                    element.style.top = '40px'; element.style.right = '40px';
+                    element.style.transform = 'translateX(100px)'; break;
+            }
+        }
+
+        function lightenColor(hex, percent) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, (num >> 16) + amt);
+            const G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+            const B = Math.min(255, (num & 0x0000FF) + amt);
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        function showInPreview(username, achievement) {
+            const preview = document.getElementById('previewArea');
+            if (!preview) return;
+            preview.innerHTML = `
+                <div style="background:linear-gradient(135deg, #1f1f23, #2d1b69);border:2px solid ${achievement.color || '#9147ff'};border-radius:16px;padding:20px 32px;display:flex;align-items:center;gap:16px;">
+                    <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,${achievement.color || '#9147ff'},${lightenColor(achievement.color || '#9147ff',40)});display:flex;align-items:center;justify-content:center;font-size:28px;">${achievement.icon || '🏆'}</div>
+                    <div>
+                        <div style="font-size:14px;color:#bf94ff;margin-bottom:4px;">НОВАЯ АЧИВКА!</div>
+                        <div style="font-size:18px;font-weight:700;"><span style="color:#9147ff;">${username}</span> — ${achievement.name}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showPreviewNotification() {
+            showNotification('TestUser', { name: 'Тестовая ачивка', icon: '🎉', color: '#9147ff' });
+        }
+
+        // ============ ЧАТ ============
+        function addChatMessage(username, message, color) {
+            const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+            const chatLog = document.getElementById('chatLog');
+            if (state.chatMessages.length === 0) chatLog.innerHTML = '';
+            state.chatMessages.push({ username, message, color, time });
+            if (state.chatMessages.length > 200) {
+                state.chatMessages.shift();
+                if (chatLog.firstChild) chatLog.removeChild(chatLog.firstChild);
+            }
+            const msgEl = document.createElement('div');
+            msgEl.className = 'chat-message';
+            msgEl.innerHTML = `<span class="chat-time">${time}</span><span class="chat-username" style="color:${color}">${username}</span>${escapeHtml(message)}`;
+            chatLog.appendChild(msgEl);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============ УПРАВЛЕНИЕ АЧИВКАМИ ============
+        function renderAchievements(filter = 'all') {
+            const list = document.getElementById('achievementsList');
+            let achievements = state.achievements;
+            if (filter === 'active') achievements = achievements.filter(a => a.enabled);
+            if (filter === 'disabled') achievements = achievements.filter(a => !a.enabled);
+            if (achievements.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#adadb8;padding:40px;">Нет ачивок. Создайте первую!</div>';
+                return;
+            }
+            list.innerHTML = achievements.map(ach => `
+                <div class="achievement-card" style="opacity:${ach.enabled ? 1 : 0.5}">
+                    <div class="achievement-icon" style="background:${ach.color}20;border:2px solid ${ach.color}">${ach.icon}</div>
+                    <div class="achievement-info">
+                        <h4>${ach.name}</h4>
+                        <p>${ach.description} • ${describeConditions(ach.conditions)}</p>
+                    </div>
+                    <div class="achievement-actions">
+                        <button class="btn btn-small ${ach.enabled ? 'btn-secondary' : 'btn-success'}" onclick="toggleAchievement('${ach.id}')">${ach.enabled ? 'Выкл' : 'Вкл'}</button>
+                        <button class="btn btn-small btn-secondary" onclick="editAchievement('${ach.id}')">✏️</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteAchievement('${ach.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function describeConditions(conditions) {
+            if (!conditions) return 'Нет условий';
+            return conditions.map(c => {
+                switch(c.type) {
+                    case 'messages_total': return `${c.value} сообщений`;
+                    case 'messages_in_time': return `${c.value} сообщ. за ${c.timeWindow} мин`;
+                    case 'first_message': return 'Первое сообщение';
+                    case 'contains_word': return `Слово "${c.value}"`;
+                    case 'caps_message': return `${c.value} капс-сообщений`;
+                    case 'emote_count': return `${c.value} эмодзи`;
+                    case 'bits_total': return `${c.value} бит`;
+                    case 'subs_total': return `${c.value} подписок`;
+                    case 'message_length': return `Длина ≥ ${c.value} симв.`;
+                    case 'time_of_day': return `Время: ${c.timeModifier || c.value}`;
+                    case 'messages_exact': return `Ровно ${c.value} сообщений`;
+                    case 'word_count': return `≥ ${c.value} слов`;
+                    default: return c.type;
+                }
+            }).join(', ');
+        }
+
+        function toggleAchievement(id) {
+            const ach = state.achievements.find(a => a.id === id);
+            if (ach) { ach.enabled = !ach.enabled; saveState(); renderAchievements(); }
+        }
+
+        function deleteAchievement(id) {
+            if (confirm('Удалить эту ачивку?')) {
+                state.achievements = state.achievements.filter(a => a.id !== id);
+                saveState(); renderAchievements();
+            }
+        }
+
+        function editAchievement(id) {
+            const ach = state.achievements.find(a => a.id === id);
+            if (!ach) return;
+            state.editingAchievementId = id;
+            document.getElementById('modalTitle').textContent = 'Редактировать ачивку';
+            document.getElementById('achName').value = ach.name;
+            document.getElementById('achDescription').value = ach.description;
+            document.getElementById('achIcon').value = ach.icon;
+            document.getElementById('achColor').value = ach.color;
+            document.getElementById('achLogic').value = ach.logic;
+            document.getElementById('achRepeatable').value = ach.repeatable.toString();
+            document.getElementById('conditionsList').innerHTML = '';
+            if (ach.conditions) ach.conditions.forEach(c => addConditionRow(c));
+            document.getElementById('achievementModal').classList.add('active');
+        }
+
+        function openAchievementModal() {
+            state.editingAchievementId = null;
+            document.getElementById('modalTitle').textContent = 'Новая ачивка';
+            document.getElementById('achName').value = '';
+            document.getElementById('achDescription').value = '';
+            document.getElementById('achIcon').value = '🏆';
+            document.getElementById('achColor').value = '#9147ff';
+            document.getElementById('achLogic').value = 'AND';
+            document.getElementById('achRepeatable').value = 'false';
+            document.getElementById('conditionsList').innerHTML = '';
+            addConditionRow();
+            document.getElementById('achievementModal').classList.add('active');
+        }
+
+        function closeAchievementModal() {
+            document.getElementById('achievementModal').classList.remove('active');
+        }
+
+        function addConditionRow(existing = null) {
+            const container = document.getElementById('conditionsList');
+            const row = document.createElement('div');
+            row.className = 'condition-row';
+            row.innerHTML = `
+                <select class="cond-type" onchange="onCondTypeChange(this)">
+                    <option value="messages_total">Сообщений (всего)</option>
+                    <option value="messages_in_time">Сообщений за время</option>
+                    <option value="first_message">Первое сообщение</option>
+                    <option value="contains_word">Содержит слово</option>
+                    <option value="caps_message">Капс сообщения</option>
+                    <option value="emote_count">Кол-во эмодзи</option>
+                    <option value="bits_total">Биты (всего)</option>
+                    <option value="subs_total">Подписки</option>
+                    <option value="message_length">Длина сообщения</option>
+                    <option value="time_of_day">Время суток</option>
+                    <option value="messages_exact">Ровно N сообщений</option>
+                    <option value="word_count">Кол-во слов</option>
+                </select>
+                <input class="cond-value" placeholder="Значение" value="${existing ? existing.value : ''}">
+                <input class="cond-extra" placeholder="Доп." style="display:none;">
+                <button class="btn btn-danger btn-small" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(row);
+            if (existing) {
+                row.querySelector('.cond-type').value = existing.type;
+                if (existing.timeWindow) {
+                    row.querySelector('.cond-extra').value = existing.timeWindow;
+                    row.querySelector('.cond-extra').style.display = 'block';
+                }
+                if (existing.timeModifier) {
+                    row.querySelector('.cond-extra').value = existing.timeModifier;
+                    row.querySelector('.cond-extra').style.display = 'block';
+                }
+                onCondTypeChange(row.querySelector('.cond-type'));
+            }
+        }
+
+        function onCondTypeChange(select) {
+            const row = select.parentElement;
+            const valueInput = row.querySelector('.cond-value');
+            const extraInput = row.querySelector('.cond-extra');
+            extraInput.style.display = 'none';
+            valueInput.style.display = 'block';
+            valueInput.placeholder = 'Значение';
+            switch(select.value) {
+                case 'first_message': valueInput.style.display = 'none'; break;
+                case 'messages_in_time':
+                    extraInput.style.display = 'block';
+                    extraInput.placeholder = 'Минуты';
+                    valueInput.placeholder = 'Кол-во сообщ.'; break;
+                case 'time_of_day':
+                    valueInput.style.display = 'none';
+                    extraInput.style.display = 'block';
+                    extraInput.placeholder = 'night/morning/evening'; break;
+                case 'contains_word': valueInput.placeholder = 'Слово'; break;
+            }
+        }
+
+        function saveAchievement() {
+            const name = document.getElementById('achName').value.trim();
+            const description = document.getElementById('achDescription').value.trim();
+            const icon = document.getElementById('achIcon').value.trim() || '🏆';
+            const color = document.getElementById('achColor').value;
+            const logic = document.getElementById('achLogic').value;
+            const repeatable = document.getElementById('achRepeatable').value === 'true';
+            if (!name) { alert('Введите название'); return; }
+            const conditions = [];
+            document.querySelectorAll('#conditionsList .condition-row').forEach(row => {
+                const type = row.querySelector('.cond-type').value;
+                const value = row.querySelector('.cond-value').value;
+                const extra = row.querySelector('.cond-extra').value;
+                const cond = { type, value };
+                if (type === 'messages_in_time') cond.timeWindow = extra;
+                if (type === 'time_of_day') cond.timeModifier = extra;
+                if (type === 'first_message') cond.value = '1';
+                conditions.push(cond);
+            });
+            if (conditions.length === 0) { alert('Добавьте хотя бы одно условие'); return; }
+            const achData = { name, description, icon, color, logic, repeatable, conditions, enabled: true };
+            if (state.editingAchievementId) {
+                const idx = state.achievements.findIndex(a => a.id === state.editingAchievementId);
+                if (idx >= 0) state.achievements[idx] = { ...state.achievements[idx], ...achData };
+            } else {
+                achData.id = 'ach_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                state.achievements.push(achData);
+            }
+            saveState(); renderAchievements(); closeAchievementModal();
+            addLog(`Ачивка "${name}" ${state.editingAchievementId ? 'обновлена' : 'создана'}`, 'info');
+        }
+
+        // ============ ПРЕСЕТЫ ============
+        function addPreset(type) {
+            const presets = {
+                first_message: { name: 'Первые шаги', description: 'Первое сообщение в чате', icon: '🎉', color: '#00c853', conditions: [{ type: 'first_message', value: '1' }], logic: 'AND', repeatable: false },
+                '100_messages': { name: 'Болтун', description: '100 сообщений', icon: '💬', color: '#2196f3', conditions: [{ type: 'messages_total', value: '100' }], logic: 'AND', repeatable: false },
+                '1000_messages': { name: 'Легенда чата', description: '1000 сообщений', icon: '🔥', color: '#ff5722', conditions: [{ type: 'messages_total', value: '1000' }], logic: 'AND', repeatable: false },
+                spam_100: { name: 'Спамер', description: '100 сообщений за 5 минут', icon: '⚡', color: '#ffeb3b', conditions: [{ type: 'messages_in_time', value: '100', timeWindow: '5' }], logic: 'AND', repeatable: true },
+                night_owl: { name: 'Ночная сова', description: 'Сообщение ночью', icon: '🦉', color: '#3f51b5', conditions: [{ type: 'time_of_day', value: '', timeModifier: 'night' }], logic: 'AND', repeatable: true },
+                early_bird: { name: 'Ранняя пташка', description: 'Сообщение утром', icon: '🐦', color: '#ff9800', conditions: [{ type: 'time_of_day', value: '', timeModifier: 'morning' }], logic: 'AND', repeatable: true },
+                emote_spam: { name: 'Эмодзи-мастер', description: '50 эмодзи', icon: '😂', color: '#e91e63', conditions: [{ type: 'emote_count', value: '50' }], logic: 'AND', repeatable: false },
+                caps_master: { name: 'Крик души', description: '10 сообщений КАПСОМ', icon: '📢', color: '#f44336', conditions: [{ type: 'caps_message', value: '10' }], logic: 'AND', repeatable: false },
+                bits_100: { name: 'Щедрый', description: '100 бит', icon: '💎', color: '#00bcd4', conditions: [{ type: 'bits_total', value: '100' }], logic: 'AND', repeatable: false },
+                long_message: { name: 'Писатель', description: 'Сообщение 200+ символов', icon: '📝', color: '#795548', conditions: [{ type: 'message_length', value: '200' }], logic: 'AND', repeatable: true }
+            };
+            const preset = presets[type];
+            if (!preset) return;
+            preset.id = 'ach_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            preset.enabled = true;
+            state.achievements.push(preset);
+            saveState(); renderAchievements();
+            addLog(`Добавлена ачивка: "${preset.name}"`, 'info');
+        }
+
+        // ============ ПОЛЬЗОВАТЕЛИ ============
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
+            let users = Object.entries(state.users)
+                .map(([id, u]) => ({ id, ...u }))
+                .filter(u => u.name.toLowerCase().includes(search))
+                .sort((a, b) => b.messages - a.messages);
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#adadb8;padding:20px;">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.slice(0, 100).map(u => `
+                <tr>
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.messages}</td>
+                    <td>${u.achievements ? u.achievements.length : 0}</td>
+                    <td>${u.bits || 0}</td>
+                    <td>${new Date(u.firstMessage).toLocaleString('ru-RU')}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ============ OVERLAY ============
+        function updateOverlayUrl() {
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            document.getElementById('overlayUrl').value = baseUrl + '?overlay=true';
+        }
+
+        function copyOverlayUrl() {
+            const input = document.getElementById('overlayUrl');
+            input.select();
+            document.execCommand('copy');
+            alert('URL скопирован!');
+        }
+
+        function saveOverlaySettings() {
+            state.overlaySettings = {
+                position: document.getElementById('overlayPosition').value,
+                duration: parseInt(document.getElementById('overlayDuration').value),
+                borderColor: document.getElementById('overlayBorderColor').value
+            };
+            saveState();
+            addLog('Настройки оверлея сохранены', 'info');
+        }
+
+        // ============ ЛОГ ============
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('ru-RU');
+            state.logs.unshift({ message, type, time });
+            if (state.logs.length > 500) state.logs.pop();
+            const logArea = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `[${time}] ${message}`;
+            logArea.insertBefore(entry, logArea.firstChild);
+            if (logArea.children.length > 500) logArea.removeChild(logArea.lastChild);
+        }
+
+        function clearLog() {
+            state.logs = [];
+            document.getElementById('logArea').innerHTML = '';
+        }
+
+        // ============ НАВИГАЦИЯ ============
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    item.classList.add('active');
+                    document.getElementById('page-' + item.dataset.page).classList.add('active');
+                });
+            });
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderAchievements(tab.dataset.filter);
+                });
+            });
+        }
+
+        function startUptimeTimer() {
+            setInterval(() => {
+                if (state.startTime) {
+                    const elapsed = Date.now() - state.startTime;
+                    const mins = Math.floor(elapsed / 60000);
+                    const secs = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('statUptime').textContent = 
+                        `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                }
+            }, 1000);
+        }
+
+        // ============ ЗАПУСК ============
+        init();
+    </script>
+</body>
+</html>
