@@ -400,30 +400,35 @@
         // ============ ИНИЦИАЛИЗАЦИЯ ============
         function init() {
             loadState();
-            renderAchievements();
-            renderUsers();
-            updateOverlayUrl();
-            setupNavigation();
-            setupTabs();
-            startUptimeTimer();
-            checkAuthCallback();
-            checkOverlayMode();
+			renderAchievements();
+			renderUsers();
+			updateOverlayUrl();
+			setupNavigation();
+			setupTabs();
+			startUptimeTimer();
+			checkAuthCallback();
+			
+			// Автопереподключение к чату
+			if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
+				const channel = localStorage.getItem('twitch_channel');
+				document.getElementById('channelName').value = channel;
+				setTimeout(() => {
+					if (!state.chatConnected) connectChat();
+				}, 1500);
+    }
+    
+    checkOverlayMode();
+			
         }
 
-        function checkOverlayMode() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('overlay') === 'true') {
-                document.getElementById('dashboard').style.display = 'none';
-                document.getElementById('overlayContainer').classList.add('active');
-                if (state.accessToken) {
-                    const channel = localStorage.getItem('twitch_channel');
-                    if (channel) {
-                        document.getElementById('channelName').value = channel;
-                        setTimeout(toggleChatConnection, 1000);
-                    }
-                }
-            }
-        }
+			function checkOverlayMode() {
+				const params = new URLSearchParams(window.location.search);
+				if (params.get('overlay') === 'true') {
+					document.getElementById('dashboard').style.display = 'none';
+					document.getElementById('overlayContainer').classList.add('active');
+					// Подключение произойдёт автоматически в showConnectedPanel()
+				}
+			}
 
         function loadState() {
             try {
@@ -524,6 +529,13 @@
             if (!document.getElementById('channelName').value) {
                 document.getElementById('channelName').value = state.userInfo.login;
             }
+			// Автоподключение в режиме OBS
+			if (new URLSearchParams(window.location.search).get('overlay') === 'true') {
+				const channel = localStorage.getItem('twitch_channel');
+				if (channel && !state.chatConnected) {
+					setTimeout(() => connectChat(), 1000);
+				}
+			}
         }
 
         function logout() {
