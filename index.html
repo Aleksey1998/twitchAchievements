@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Twitch Ачивочки</title>
-	<script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/tmi.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #0e0e10; color: #efeff1; min-height: 100vh; }
@@ -115,8 +114,6 @@
     </style>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/tmi.min.js"></script>
-<script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
     <div class="app-container" id="dashboard">
         <div class="sidebar">
             <div class="sidebar-logo">
@@ -383,6 +380,7 @@
             connected: false,
             chatConnected: false,
             client: null,
+			ws: null,
             accessToken: null,
             userInfo: null,
             users: {},
@@ -426,8 +424,7 @@
                 }
             }
         }
-		const userInfo = localStorage.getItem('twitch_user_info');
-		if (userInfo) state.userInfo = JSON.parse(userInfo);
+
         function loadState() {
             try {
                 const saved = localStorage.getItem('twitch_achievements');
@@ -443,6 +440,8 @@
                 document.getElementById('overlayPosition').value = state.overlaySettings.position;
                 document.getElementById('overlayDuration').value = state.overlaySettings.duration;
                 document.getElementById('overlayBorderColor').value = state.overlaySettings.borderColor;
+				const userInfo = localStorage.getItem('twitch_user_info');
+				if (userInfo) state.userInfo = JSON.parse(userInfo);
             } catch(e) { console.error('Load error:', e); }
         }
 
@@ -532,10 +531,10 @@
             state.userInfo = null;
             localStorage.removeItem('twitch_access_token');
 			localStorage.removeItem('twitch_user_info');
-            if (state.client) {
-                state.client.disconnect();
-                state.client = null;
-            }
+            if (state.ws) {
+				state.ws.close();
+				state.ws = null;
+			}
             state.chatConnected = false;
             document.getElementById('loginPanel').style.display = 'block';
             document.getElementById('connectedPanel').style.display = 'none';
@@ -551,48 +550,121 @@
             }
         }
 
-        function connectChat() {
-			if (!state.userInfo) {
-				alert('Информация о пользователе не загружена. Обновите страницу.');
-				return;
+		function connectChat() {
+			if (!state.userInfo) { alert('Обновите страницу'); return; }
+			if (!state.accessToken) { alert('Сначала авторизуйтесь'); return; }
+			const channel = document.getElementById('channelName').value.trim().toLowerCase();
+			if (!channel) { alert('Введите канал'); return; }
+			localStorage.setItem('twitch_channel', channel);
+
+			try {
+				state.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+				
+				state.ws.onopen = () => {
+					state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+					state.ws.send(`PASS oauth:${state.accessToken}`);
+					state.ws.send(`NICK ${state.userInfo.login}`);
+					state.ws.send(`JOIN #${channel}`);
+					addLog(`Подключение к #${channel}...`, 'info');
+				};
+				
+				state.ws.onmessage = (event) => {
+					const lines = event.data.split('\r\n');
+					lines.forEach(line => {
+						if (!line) return;
+						if (line.startsWith('PING')) {
+							state.ws.send('PONG' + line.slice(4));
+							return;
+						}
+						if (line.includes('366')) {
+							state.chatConnected = true;
+							state.startTime = Date.now();
+							document.getElementById('connectBtn').textContent = 'Отключиться';
+							document.getElementById('connectBtn').className = 'btn btn-danger';
+							addLog('Подключено к чату', 'info');
+						}
+						if (line.includes('PRIVMSG')) {
+							parseIRCMessage(line);
+						}
+					});
+				};
+				
+				state.ws.onclose = () => {
+					state.chatConnected = false;
+					document.getElementById('connectBtn').textContent = 'Подключиться к чату';
+					document.getElementById('connectBtn').className = 'btn btn-primary';
+					addLog('Отключено от чата', 'error');
+				};
+				
+				state.ws.onerror = (e) => {
+					addLog('Ошибка WebSocket', 'error');
+					console.error(e);
+				};
+			} catch(e) {
+				addLog('Ошибка: ' + e.message, 'error');
 			}
-            if (!state.accessToken) {
-                alert('Сначала авторизуйтесь через Twitch');
-                return;
-            }
-            const channel = document.getElementById('channelName').value.trim().toLowerCase();
-            if (!channel) {
-                alert('Введите имя канала');
-                return;
-            }
-            localStorage.setItem('twitch_channel', channel);
-
-            const opts = {
-                channels: [channel],
-                connection: { reconnect: true, secure: true },
-                identity: {
-                    username: state.userInfo.login,
-                    password: `oauth:${state.accessToken}`
-                }
-            };
-
-            try {
-                state.client = new tmi.client(opts);
-                state.client.on('message', onMessage);
-                state.client.on('connected', onChatConnected);
-                state.client.on('disconnected', onChatDisconnected);
-                state.client.connect();
-            } catch(e) {
-                addLog('Ошибка подключения: ' + e.message, 'error');
-            }
-        }
+		}
 
         function disconnectChat() {
-            if (state.client) {
-                state.client.disconnect();
-            }
-        }
-
+			if (state.ws) {
+				state.ws.close();
+				state.ws = null;
+			}
+		}
+		
+		function parseIRCMessage(line) {
+			const tagsMatch = line.match(/^@([^ ]+) /);
+			const tags = {};
+			if (tagsMatch) {
+				tagsMatch[1].split(';').forEach(pair => {
+					const [key, val] = pair.split('=');
+					tags[key] = val || '';
+				});
+			}
+			
+			const userMatch = line.match(/:([^!]+)![^@]+@[^ ]+ PRIVMSG ([^ ]+) :(.+)$/);
+			if (!userMatch) return;
+			
+			const username = tags['display-name'] || userMatch[1];
+			const userId = userMatch[1].toLowerCase();
+			const message = userMatch[3];
+			const now = Date.now();
+			
+			if (!state.users[userId]) {
+				state.users[userId] = {
+					name: username, messages: 0, firstMessage: now, lastMessage: now,
+					achievements: [], messageTimestamps: [], emoteCount: 0,
+					capsMessages: 0, bits: 0, subs: 0
+				};
+			}
+			
+			const user = state.users[userId];
+			user.messages++;
+			user.lastMessage = now;
+			user.messageTimestamps.push(now);
+			user.name = username;
+			
+			const tenMinAgo = now - 600000;
+			user.messageTimestamps = user.messageTimestamps.filter(t => t > tenMinAgo);
+			
+			if (message.length > 10 && message === message.toUpperCase()) {
+				user.capsMessages++;
+			}
+			
+			if (tags.emotes) {
+				user.emoteCount += tags.emotes.split('/').filter(e => e).length;
+			}
+			
+			state.stats.messages++;
+			document.getElementById('statMessages').textContent = state.stats.messages;
+			document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+			
+			const color = tags.color || '#9147ff';
+			addChatMessage(username, message, color);
+			checkAchievements(userId, user, message, tags);
+			saveState();
+		}
+		
         function onChatConnected() {
             state.chatConnected = true;
             state.startTime = Date.now();
@@ -1118,4 +1190,4 @@
         init();
     </script>
 </body>
-</html><script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/tmi.min.js"></script>
+</html>
