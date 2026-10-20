@@ -78,7 +78,7 @@
         .users-table th { background: #0e0e10; font-weight: 600; color: #adadb8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
         .users-table tr { border-bottom: 1px solid #2f2f35; }
         .users-table tr:last-child { border-bottom: none; }
-        .notification-preview-area { background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; padding: 40px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
+        .notification-preview-area { background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 12px; }
         .overlay-container { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; pointer-events: none; z-index: 9999; }
         .overlay-container.active { display: block; }
         .overlay-notification { opacity: 0; position: fixed; background: linear-gradient(135deg, #1f1f23 0%, #2d1b69 100%); border: 2px solid #9147ff; border-radius: 16px; padding: 20px 32px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(145, 71, 255, 0.3); animation: slideUp 0.5s ease forwards, slideDown 0.5s ease 5s forwards; pointer-events: none; }
@@ -187,23 +187,23 @@
                     <button class="btn btn-danger" onclick="logout()" style="margin-top:12px;">Выйти</button>
                 </div>
 
-				<div class="connection-panel">
-					<h3>Управление данными</h3>
-					<div style="display:flex;gap:12px;flex-wrap:wrap;">
-						<button class="btn btn-success" onclick="exportData()">📥 Экспорт данных</button>
-						<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Импорт данных</button>
-						<input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-						<button class="btn btn-primary" onclick="document.getElementById('importAchFile').click()">🏆 Импорт ачивок</button>
-						<input type="file" id="importAchFile" accept=".json" style="display:none;" onchange="importAchievements(event)">
-						<button class="btn btn-danger" onclick="clearAllData()">🗑️ Очистить все данные</button>
-					</div>
-				</div>
+                <div class="connection-panel">
+                    <h3>Управление данными</h3>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <button class="btn btn-success" onclick="exportData()">📥 Экспорт данных</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Импорт данных</button>
+                        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                        <button class="btn btn-primary" onclick="document.getElementById('importAchFile').click()">🏆 Импорт ачивок</button>
+                        <input type="file" id="importAchFile" accept=".json" style="display:none;" onchange="importAchievements(event)">
+                        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Очистить все данные</button>
+                    </div>
+                </div>
 
-				<div class="stats-grid">
-					<div class="stat-card">
-						<div class="stat-value" id="statMessages">0</div>
-						<div class="stat-label">Сообщений</div>
-					</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statMessages">0</div>
+                        <div class="stat-label">Сообщений</div>
+                    </div>
                     <div class="stat-card">
                         <div class="stat-value" id="statUsers">0</div>
                         <div class="stat-label">Пользователей</div>
@@ -263,7 +263,7 @@
                                 <th>Ачивок</th>
                                 <th>Биты</th>
                                 <th>Первое сообщение</th>
-								<th>Действия</th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody"></tbody>
@@ -273,9 +273,9 @@
 
             <div class="page" id="page-chat">
                 <h2 class="page-title">Чат</h2>
-				<div class="chat-log" id="chatLog">
-					<div class="chat-placeholder" style="text-align:center;color:#adadb8;padding:40px;">Подключитесь к каналу для отображения чата</div>
-				</div>
+                <div class="chat-log" id="chatLog">
+                    <div class="chat-placeholder" style="text-align:center;color:#adadb8;padding:40px;">Подключитесь к каналу для отображения чата</div>
+                </div>
             </div>
 
             <div class="page" id="page-overlay">
@@ -320,8 +320,11 @@
                 <h3 style="margin:24px 0 12px;">Предпросмотр уведомления</h3>
                 <div class="notification-preview-area" id="previewArea">
                     <button class="btn btn-secondary" onclick="showPreviewNotification()">Показать пример</button>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-secondary" onclick="openOBSWindow()">🪟 Открыть OBS в новом окне</button>
+                        <button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
+                    </div>
                 </div>
-				<button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
             </div>
 
             <div class="page" id="page-log">
@@ -384,65 +387,108 @@
     <div class="overlay-container" id="overlayContainer"></div>
 
     <script>
+        // ============ КОНФИГУРАЦИЯ ============
         const CLIENT_ID = 'eyc4k9sznnh9hvi6tg097fvqx9pa9b';
         const REDIRECT_URI = 'https://aleksey1998.github.io/twitchAchievements/';
         const SCOPES = 'chat:read chat:edit user:read:chat channel:read:subscriptions bits:read';
 
-		let state = {
-			connected: false,
-			chatConnected: false,
-			client: null,
-			ws: null,
-			accessToken: null,
-			userInfo: null,
-			users: {},
-			achievements: [],
-			chatMessages: [],
-			logs: [],
-			stats: { messages: 0, achievementsGiven: 0 },
-			startTime: null,
-			overlaySettings: {
-				position: 'bottom-center',
-				duration: 6,
-				borderColor: '#9147ff'
-			},
-			editingAchievementId: null,
-			broadcastChannel: null
-		};
+        let state = {
+            connected: false,
+            chatConnected: false,
+            client: null,
+            ws: null,
+            accessToken: null,
+            userInfo: null,
+            users: {},
+            achievements: [],
+            chatMessages: [],
+            logs: [],
+            stats: { messages: 0, achievementsGiven: 0 },
+            startTime: null,
+            overlaySettings: {
+                position: 'bottom-center',
+                duration: 6,
+                borderColor: '#9147ff'
+            },
+            editingAchievementId: null,
+            broadcastChannel: null
+        };
 
-		function init() {
-			loadState();
-			renderAchievements();
-			renderUsers();
-			updateOverlayUrl();
-			setupNavigation();
-			setupTabs();
-			startUptimeTimer();
-			checkAuthCallback();
-			
-			// Инициализация канала связи между вкладками
-			try {
-				state.broadcastChannel = new BroadcastChannel('twitch-achievements');
-				state.broadcastChannel.onmessage = (event) => {
-					if (event.data.type === 'test-notification') {
-						showNotification(event.data.username, event.data.achievement);
-						addLog('🎯 Тестовое уведомление получено из другой вкладки', 'info');
-					}
-				};
-			} catch(e) {
-				console.warn('BroadcastChannel не поддерживается');
-			}
-			
-			if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
-				const channel = localStorage.getItem('twitch_channel');
-				document.getElementById('channelName').value = channel;
-				setTimeout(() => {
-					if (!state.chatConnected) connectChat();
-				}, 1500);
-			}
-			
-			checkOverlayMode();
-		}
+        let obsWindow = null;
+
+        // ============ ИНИЦИАЛИЗАЦИЯ ============
+        function init() {
+            loadState();
+            renderAchievements();
+            renderUsers();
+            updateOverlayUrl();
+            setupNavigation();
+            setupTabs();
+            startUptimeTimer();
+            checkAuthCallback();
+            
+            // Настройка каналов связи между вкладками
+            setupNotificationChannels();
+            
+            if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
+                const channel = localStorage.getItem('twitch_channel');
+                document.getElementById('channelName').value = channel;
+                setTimeout(() => {
+                    if (!state.chatConnected) connectChat();
+                }, 1500);
+            }
+            
+            checkOverlayMode();
+        }
+
+        // ============ КАНАЛЫ СВЯЗИ МЕЖДУ ВКЛАДКАМИ ============
+        function checkForNotifications() {
+            try {
+                const data = localStorage.getItem('twitch_test_notification');
+                if (!data) return;
+                
+                const notification = JSON.parse(data);
+                const lastSeen = parseInt(localStorage.getItem('twitch_last_notification_time') || '0');
+                
+                if (notification.timestamp > lastSeen) {
+                    showNotification(notification.username, notification.achievement);
+                    localStorage.setItem('twitch_last_notification_time', notification.timestamp.toString());
+                }
+            } catch(e) {}
+        }
+
+        function setupNotificationChannels() {
+            // 1. Слушаем изменения в localStorage
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'twitch_test_notification' && event.newValue) {
+                    checkForNotifications();
+                }
+            });
+            
+            // 2. Polling для OBS Browser Source (каждые 500мс)
+            setInterval(checkForNotifications, 500);
+            
+            // 3. BroadcastChannel для обычных вкладок
+            try {
+                state.broadcastChannel = new BroadcastChannel('twitch-achievements');
+                state.broadcastChannel.onmessage = (event) => {
+                    if (event.data && event.data.type === 'test-notification') {
+                        showNotification(event.data.username, event.data.achievement);
+                        addLog('🎯 Тестовое уведомление получено из другой вкладки', 'info');
+                    }
+                };
+            } catch(e) {
+                console.warn('BroadcastChannel не поддерживается');
+            }
+            
+            // 4. Прямые сообщения через postMessage
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'test-notification') {
+                    showNotification(event.data.username, event.data.achievement);
+                    addLog('🎯 Прямое уведомление получено', 'info');
+                }
+            });
+        }
 
         function checkOverlayMode() {
             const params = new URLSearchParams(window.location.search);
@@ -463,6 +509,7 @@
             }
         }
 
+        // ============ СОСТОЯНИЕ ============
         function loadState() {
             try {
                 const saved = localStorage.getItem('twitch_achievements');
@@ -494,6 +541,7 @@
             } catch(e) { console.error('Save error:', e); }
         }
 
+        // ============ АВТОРИЗАЦИЯ ============
         function loginWithTwitch() {
             const scope = encodeURIComponent(SCOPES);
             const redirectUri = encodeURIComponent(REDIRECT_URI);
@@ -584,6 +632,7 @@
             addLog('Вы вышли из аккаунта', 'info');
         }
 
+        // ============ ПОДКЛЮЧЕНИЕ К ЧАТУ ============
         function toggleChatConnection() {
             if (state.chatConnected) {
                 disconnectChat();
@@ -603,14 +652,14 @@
                 state.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
                 
                 state.ws.onopen = () => {
-					if (state.ws.readyState === WebSocket.OPEN) {
-						state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-						state.ws.send(`PASS oauth:${state.accessToken}`);
-						state.ws.send(`NICK ${state.userInfo.login}`);
-						state.ws.send(`JOIN #${channel}`);
-						addLog(`Подключение к #${channel}...`, 'info');
-					}
-				};
+                    if (state.ws.readyState === WebSocket.OPEN) {
+                        state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+                        state.ws.send(`PASS oauth:${state.accessToken}`);
+                        state.ws.send(`NICK ${state.userInfo.login}`);
+                        state.ws.send(`JOIN #${channel}`);
+                        addLog(`Подключение к #${channel}...`, 'info');
+                    }
+                };
                 
                 state.ws.onmessage = (event) => {
                     const lines = event.data.split('\r\n');
@@ -719,53 +768,7 @@
             saveState();
         }
 
-        function onMessage(channel, tags, message, self) {
-            if (self) return;
-            const username = tags['display-name'] || tags.username;
-            const userId = tags.username;
-            const now = Date.now();
-
-            if (!state.users[userId]) {
-                state.users[userId] = {
-                    name: username,
-                    messages: 0,
-                    firstMessage: now,
-                    lastMessage: now,
-                    achievements: [],
-                    messageTimestamps: [],
-                    emoteCount: 0,
-                    capsMessages: 0,
-                    bits: 0,
-                    subs: 0
-                };
-            }
-
-            const user = state.users[userId];
-            user.messages++;
-            user.lastMessage = now;
-            user.messageTimestamps.push(now);
-            user.name = username;
-
-            const tenMinAgo = now - 600000;
-            user.messageTimestamps = user.messageTimestamps.filter(t => t > tenMinAgo);
-
-            if (message.length > 10 && message === message.toUpperCase()) {
-                user.capsMessages++;
-            }
-
-            if (tags.emotes) {
-                user.emoteCount += Object.keys(tags.emotes).length;
-            }
-
-            state.stats.messages++;
-            document.getElementById('statMessages').textContent = state.stats.messages;
-            document.getElementById('statUsers').textContent = Object.keys(state.users).length;
-
-            addChatMessage(username, message, tags.color || '#9147ff');
-            checkAchievements(userId, user, message, tags);
-            saveState();
-        }
-
+        // ============ ПРОВЕРКА АЧИВОК ============
         function checkAchievements(userId, user, message, tags) {
             state.achievements.forEach(ach => {
                 if (!ach.enabled) return;
@@ -820,6 +823,7 @@
             saveState();
         }
 
+        // ============ УВЕДОМЛЕНИЯ ============
         function showNotification(username, achievement) {
             const container = document.getElementById('overlayContainer');
             if (!container) return;
@@ -918,48 +922,69 @@
                 </div>
             `;
         }
-		
-		function sendTestToOBS() {
-			const testAchievement = {
-				name: 'Тестовая ачивка',
-				icon: '🎯',
-				color: state.overlaySettings.borderColor || '#9147ff'
-			};
-			
-			const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
-			
-			if (isOverlayMode) {
-				// В режиме OBS — показываем уведомление локально
-				showNotification('TestUser', testAchievement);
-				addLog('🎯 Тестовое уведомление отправлено в OBS', 'info');
-			} else {
-				// На основной странице — отправляем в окно OBS через BroadcastChannel
-				if (state.broadcastChannel) {
-					state.broadcastChannel.postMessage({
-						type: 'test-notification',
-						username: 'TestUser',
-						achievement: testAchievement
-					});
-					addLog('🎯 Тестовое уведомление отправлено в окно OBS', 'info');
-					showInPreview('TestUser', testAchievement);
-				} else {
-					addLog('❌ Канал связи не поддерживается в этом браузере', 'error');
-					alert('Ваш браузер не поддерживает обмен сообщениями между вкладками');
-				}
-			}
-		}
 
+        function openOBSWindow() {
+            const overlayUrl = document.getElementById('overlayUrl').value;
+            obsWindow = window.open(overlayUrl, 'twitch-obs-overlay', 'width=1920,height=1080');
+            if (obsWindow) {
+                addLog('🪟 Окно OBS открыто в новой вкладке', 'info');
+            } else {
+                addLog('❌ Не удалось открыть окно. Разрешите всплывающие окна.', 'error');
+                alert('Разрешите всплывающие окна для этого сайта');
+            }
+        }
 
+        function sendTestToOBS() {
+            const testAchievement = {
+                name: 'Тестовая ачивка',
+                icon: '🎯',
+                color: state.overlaySettings.borderColor || '#9147ff'
+            };
+            
+            const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
+            
+            if (isOverlayMode) {
+                showNotification('TestUser', testAchievement);
+                addLog('🎯 Тестовое уведомление показано в этом окне', 'info');
+            } else {
+                const notificationData = {
+                    type: 'test-notification',
+                    username: 'TestUser',
+                    achievement: testAchievement,
+                    timestamp: Date.now()
+                };
+                
+                // 1. localStorage (для OBS Browser Source)
+                localStorage.setItem('twitch_test_notification', JSON.stringify(notificationData));
+                
+                // 2. BroadcastChannel (для обычных вкладок)
+                if (state.broadcastChannel) {
+                    state.broadcastChannel.postMessage(notificationData);
+                }
+                
+                // 3. postMessage (для окна через window.open)
+                if (obsWindow && !obsWindow.closed) {
+                    try {
+                        obsWindow.postMessage(notificationData, '*');
+                    } catch(e) {}
+                }
+                
+                showInPreview('TestUser', testAchievement);
+                addLog('🎯 Тестовое уведомление отправлено во все окна', 'info');
+            }
+        }
+
+        // ============ ЧАТ ============
         function addChatMessage(username, message, color) {
-			const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
-			const chatLog = document.getElementById('chatLog');
-			
-			const placeholder = chatLog.querySelector('.chat-placeholder');
-			if (placeholder) {
-				placeholder.remove();
-			}
-			
-			state.chatMessages.push({ username, message, color, time });
+            const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+            const chatLog = document.getElementById('chatLog');
+            
+            const placeholder = chatLog.querySelector('.chat-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            state.chatMessages.push({ username, message, color, time });
             if (state.chatMessages.length > 200) {
                 state.chatMessages.shift();
                 if (chatLog.firstChild) chatLog.removeChild(chatLog.firstChild);
@@ -978,6 +1003,7 @@
             return div.innerHTML;
         }
 
+        // ============ УПРАВЛЕНИЕ АЧИВКАМИ ============
         function renderAchievements(filter = 'all') {
             const list = document.getElementById('achievementsList');
             let achievements = state.achievements;
@@ -1183,58 +1209,58 @@
             addLog(`Добавлена ачивка: "${preset.name}"`, 'info');
         }
 
+        // ============ ПОЛЬЗОВАТЕЛИ ============
+        function deleteUser(userId) {
+            const user = state.users[userId];
+            if (!user) return;
+            
+            if (!confirm(`Удалить пользователя ${user.name} из списка?`)) {
+                return;
+            }
+            
+            delete state.users[userId];
+            saveState();
+            renderUsers();
+            
+            document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+            addLog(`🗑️ Пользователь ${user.name} удалён из списка`, 'info');
+        }
 
-			function deleteUser(userId) {
-						const user = state.users[userId];
-						if (!user) return;
-						
-						if (!confirm(`Удалить пользователя ${user.name} из списка?`)) {
-							return;
-						}
-						
-						delete state.users[userId];
-						saveState();
-						renderUsers();
-						
-						document.getElementById('statUsers').textContent = Object.keys(state.users).length;
-						addLog(`🗑️ Пользователь ${user.name} удалён из списка`, 'info');
-					}
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
+            let users = Object.entries(state.users)
+                .map(([id, u]) => ({ id, ...u }))
+                .filter(u => u.name.toLowerCase().includes(search))
+                .sort((a, b) => b.messages - a.messages);
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#adadb8;padding:20px;">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.slice(0, 100).map(u => `
+                <tr>
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.messages}</td>
+                    <td>${u.achievements ? u.achievements.length : 0}</td>
+                    <td>${u.bits || 0}</td>
+                    <td>${new Date(u.firstMessage).toLocaleString('ru-RU')}</td>
+                    <td><button class="btn btn-danger btn-small" onclick="deleteUser('${u.id}')">🗑️</button></td>
+                </tr>
+            `).join('');
+        }
 
-			function renderUsers() {
-				const tbody = document.getElementById('usersTableBody');
-				const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
-				let users = Object.entries(state.users)
-					.map(([id, u]) => ({ id, ...u }))
-					.filter(u => u.name.toLowerCase().includes(search))
-					.sort((a, b) => b.messages - a.messages);
-				if (users.length === 0) {
-					tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#adadb8;padding:20px;">Нет данных</td></tr>';
-					return;
-				}
-					tbody.innerHTML = users.slice(0, 100).map(u => `
-						<tr>
-							<td><strong>${u.name}</strong></td>
-							<td>${u.messages}</td>
-							<td>${u.achievements ? u.achievements.length : 0}</td>
-							<td>${u.bits || 0}</td>
-							<td>${new Date(u.firstMessage).toLocaleString('ru-RU')}</td>
-							<td><button class="btn btn-danger btn-small" onclick="deleteUser('${u.id}')">🗑️</button></td>
-						</tr>
-					`).join('');
-			}
-					
+        // ============ OVERLAY ============
+        function updateOverlayUrl() {
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            document.getElementById('overlayUrl').value = baseUrl + '?overlay=true';
+        }
 
-			function updateOverlayUrl() {
-				const baseUrl = window.location.href.split('?')[0].split('#')[0];
-				document.getElementById('overlayUrl').value = baseUrl + '?overlay=true';
-			}
-
-			function copyOverlayUrl() {
-				const input = document.getElementById('overlayUrl');
-				input.select();
-				document.execCommand('copy');
-				alert('URL скопирован!');
-			}
+        function copyOverlayUrl() {
+            const input = document.getElementById('overlayUrl');
+            input.select();
+            document.execCommand('copy');
+            alert('URL скопирован!');
+        }
 
         function saveOverlaySettings() {
             state.overlaySettings = {
@@ -1253,6 +1279,7 @@
             showPreviewNotification();
         }
 
+        // ============ ЛОГ ============
         function addLog(message, type = 'info') {
             const time = new Date().toLocaleTimeString('ru-RU');
             state.logs.unshift({ message, type, time });
@@ -1270,6 +1297,7 @@
             document.getElementById('logArea').innerHTML = '';
         }
 
+        // ============ НАВИГАЦИЯ ============
         function setupNavigation() {
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -1302,165 +1330,161 @@
                 }
             }, 1000);
         }
-		
-		function exportData() {
-			const data = {
-				version: '1.0',
-				exportDate: new Date().toISOString(),
-				achievements: state.achievements,
-				users: state.users,
-				stats: state.stats,
-				overlaySettings: state.overlaySettings
-			};
-			
-			const json = JSON.stringify(data, null, 2);
-			const blob = new Blob([json], { type: 'application/json' });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `twitch-achievements-backup-${new Date().toISOString().split('T')[0]}.json`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-			
-			addLog('📥 Данные экспортированы', 'info');
-		}
 
-		function importData(event) {
-			const file = event.target.files[0];
-			if (!file) return;
-			
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				try {
-					const data = JSON.parse(e.target.result);
-					
-					if (!data.achievements || !data.users) {
-						throw new Error('Неверный формат файла');
-					}
-					
-					if (!confirm('Это заменит все текущие данные. Продолжить?')) {
-						return;
-					}
-					
-					state.achievements = data.achievements || [];
-					state.users = data.users || {};
-					state.stats = data.stats || { messages: 0, achievementsGiven: 0 };
-					state.overlaySettings = data.overlaySettings || state.overlaySettings;
-					
-					saveState();
-					renderAchievements();
-					renderUsers();
-					
-					document.getElementById('statMessages').textContent = state.stats.messages;
-					document.getElementById('statUsers').textContent = Object.keys(state.users).length;
-					document.getElementById('statAchievements').textContent = state.stats.achievementsGiven;
-					
-					addLog('📤 Данные импортированы', 'info');
-					alert('Данные успешно импортированы!');
-					
-				} catch (err) {
-					alert('Ошибка импорта: ' + err.message);
-					addLog('❌ Ошибка импорта данных', 'error');
-				}
-			};
-			reader.readAsText(file);
-			
-			event.target.value = '';
-		}
+        // ============ ЭКСПОРТ/ИМПОРТ ============
+        function exportData() {
+            const data = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                achievements: state.achievements,
+                users: state.users,
+                stats: state.stats,
+                overlaySettings: state.overlaySettings
+            };
+            
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `twitch-achievements-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('📥 Данные экспортированы', 'info');
+        }
 
-		function clearAllData() {
-			if (!confirm('Вы уверены? Все данные будут удалены безвозвратно!')) {
-				return;
-			}
-			
-			if (!confirm('Точно удалить ВСЕ данные? Это действие нельзя отменить!')) {
-				return;
-			}
-			
-			localStorage.removeItem('twitch_achievements');
-			localStorage.removeItem('twitch_user_info');
-			localStorage.removeItem('twitch_channel');
-			
-			state.achievements = [];
-			state.users = {};
-			state.stats = { messages: 0, achievementsGiven: 0 };
-			
-			renderAchievements();
-			renderUsers();
-			
-			document.getElementById('statMessages').textContent = '0';
-			document.getElementById('statUsers').textContent = '0';
-			document.getElementById('statAchievements').textContent = '0';
-			
-			addLog('🗑️ Все данные удалены', 'info');
-			alert('Все данные удалены!');
-		}
-		
-		//ИМПОРТ АЧИВОК
-		function importAchievements(event) {
-			const file = event.target.files[0];
-			if (!file) return;
-			
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				try {
-					const data = JSON.parse(e.target.result);
-					
-					let achievementsToImport = [];
-					
-					// Проверяем формат файла
-					if (Array.isArray(data)) {
-						// Если это массив ачивок
-						achievementsToImport = data;
-					} else if (data.achievements && Array.isArray(data.achievements)) {
-						// Если это полный экспорт с полем achievements
-						achievementsToImport = data.achievements;
-					} else {
-						throw new Error('Неверный формат файла. Ожидается массив ачивок или объект с полем achievements');
-					}
-					
-					if (achievementsToImport.length === 0) {
-						alert('Файл не содержит ачивок');
-						return;
-					}
-					
-					// Проверяем каждую ачивку
-					const validAchievements = achievementsToImport.filter(ach => {
-						return ach.name && ach.conditions && Array.isArray(ach.conditions);
-					});
-					
-					if (validAchievements.length === 0) {
-						throw new Error('Не найдено валидных ачивок в файле');
-					}
-					
-					// Добавляем ачивки с новыми ID (чтобы избежать конфликтов)
-					validAchievements.forEach(ach => {
-						const newAch = {
-							...ach,
-							id: 'ach_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-							enabled: ach.enabled !== false
-						};
-						state.achievements.push(newAch);
-					});
-					
-					saveState();
-					renderAchievements();
-					
-					addLog(`🏆 Импортировано ${validAchievements.length} ачивок`, 'info');
-					alert(`Успешно импортировано ${validAchievements.length} ачивок!`);
-					
-				} catch (err) {
-					alert('Ошибка импорта ачивок: ' + err.message);
-					addLog('❌ Ошибка импорта ачивок: ' + err.message, 'error');
-				}
-			};
-			reader.readAsText(file);
-			
-			event.target.value = '';
-		}
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.achievements || !data.users) {
+                        throw new Error('Неверный формат файла');
+                    }
+                    
+                    if (!confirm('Это заменит все текущие данные. Продолжить?')) {
+                        return;
+                    }
+                    
+                    state.achievements = data.achievements || [];
+                    state.users = data.users || {};
+                    state.stats = data.stats || { messages: 0, achievementsGiven: 0 };
+                    state.overlaySettings = data.overlaySettings || state.overlaySettings;
+                    
+                    saveState();
+                    renderAchievements();
+                    renderUsers();
+                    
+                    document.getElementById('statMessages').textContent = state.stats.messages;
+                    document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+                    document.getElementById('statAchievements').textContent = state.stats.achievementsGiven;
+                    
+                    addLog('📤 Данные импортированы', 'info');
+                    alert('Данные успешно импортированы!');
+                    
+                } catch (err) {
+                    alert('Ошибка импорта: ' + err.message);
+                    addLog('❌ Ошибка импорта данных', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            event.target.value = '';
+        }
 
+        function clearAllData() {
+            if (!confirm('Вы уверены? Все данные будут удалены безвозвратно!')) {
+                return;
+            }
+            
+            if (!confirm('Точно удалить ВСЕ данные? Это действие нельзя отменить!')) {
+                return;
+            }
+            
+            localStorage.removeItem('twitch_achievements');
+            localStorage.removeItem('twitch_user_info');
+            localStorage.removeItem('twitch_channel');
+            
+            state.achievements = [];
+            state.users = {};
+            state.stats = { messages: 0, achievementsGiven: 0 };
+            
+            renderAchievements();
+            renderUsers();
+            
+            document.getElementById('statMessages').textContent = '0';
+            document.getElementById('statUsers').textContent = '0';
+            document.getElementById('statAchievements').textContent = '0';
+            
+            addLog('🗑️ Все данные удалены', 'info');
+            alert('Все данные удалены!');
+        }
+
+        function importAchievements(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    let achievementsToImport = [];
+                    
+                    if (Array.isArray(data)) {
+                        achievementsToImport = data;
+                    } else if (data.achievements && Array.isArray(data.achievements)) {
+                        achievementsToImport = data.achievements;
+                    } else {
+                        throw new Error('Неверный формат файла. Ожидается массив ачивок или объект с полем achievements');
+                    }
+                    
+                    if (achievementsToImport.length === 0) {
+                        alert('Файл не содержит ачивок');
+                        return;
+                    }
+                    
+                    const validAchievements = achievementsToImport.filter(ach => {
+                        return ach.name && ach.conditions && Array.isArray(ach.conditions);
+                    });
+                    
+                    if (validAchievements.length === 0) {
+                        throw new Error('Не найдено валидных ачивок в файле');
+                    }
+                    
+                    validAchievements.forEach(ach => {
+                        const newAch = {
+                            ...ach,
+                            id: 'ach_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            enabled: ach.enabled !== false
+                        };
+                        state.achievements.push(newAch);
+                    });
+                    
+                    saveState();
+                    renderAchievements();
+                    
+                    addLog(`🏆 Импортировано ${validAchievements.length} ачивок`, 'info');
+                    alert(`Успешно импортировано ${validAchievements.length} ачивок!`);
+                    
+                } catch (err) {
+                    alert('Ошибка импорта ачивок: ' + err.message);
+                    addLog('❌ Ошибка импорта ачивок: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            event.target.value = '';
+        }
+
+        // ============ ЗАПУСК ============
         init();
     </script>
 </body>
