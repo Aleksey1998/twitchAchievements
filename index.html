@@ -424,9 +424,21 @@
 			function checkOverlayMode() {
 				const params = new URLSearchParams(window.location.search);
 				if (params.get('overlay') === 'true') {
-					document.getElementById('dashboard').style.display = 'none';
 					document.getElementById('overlayContainer').classList.add('active');
-					// Подключение произойдёт автоматически в showConnectedPanel()
+					
+					// Если есть авторизация — скрываем dashboard и подключаемся
+					if (state.accessToken && state.userInfo) {
+						document.getElementById('dashboard').style.display = 'none';
+						const channel = localStorage.getItem('twitch_channel');
+						if (channel && !state.chatConnected) {
+							document.getElementById('channelName').value = channel;
+							setTimeout(() => connectChat(), 1000);
+						}
+					} else {
+						// Нет авторизации — показываем dashboard, чтобы пользователь мог войти
+						document.getElementById('dashboard').style.display = 'flex';
+						addLog('Войдите через Twitch для работы оверлея', 'info');
+					}
 				}
 			}
 
@@ -625,25 +637,33 @@
 		}
 		
 		function parseIRCMessage(line) {
-			const tagsMatch = line.match(/^@([^ ]+) /);
+			// Парсим теги
 			const tags = {};
-			if (tagsMatch) {
-				tagsMatch[1].split(';').forEach(pair => {
-					const [key, val] = pair.split('=');
-					tags[key] = val || '';
+			let lineWithoutTags = line;
+			if (line.startsWith('@')) {
+				const spaceIdx = line.indexOf(' ');
+				const tagsStr = line.substring(1, spaceIdx);
+				lineWithoutTags = line.substring(spaceIdx + 1);
+				tagsStr.split(';').forEach(pair => {
+					const eqIdx = pair.indexOf('=');
+					if (eqIdx > -1) {
+						tags[pair.substring(0, eqIdx)] = pair.substring(eqIdx + 1);
+					}
 				});
 			}
 			
-			// Убираем теги и находим начало сообщения
-			const msgStart = line.indexOf('PRIVMSG');
-			if (msgStart === -1) return;
-			const colonPos = line.indexOf(':', msgStart + 7);
-			if (colonPos === -1) return;
-			const message = line.slice(colonPos + 1);
-			const prefixEnd = line.indexOf(' ', 0);
-			const nickMatch = line.match(/^:([^\s!]+)/);
+			// Ищем никнейм после ":"
+			const nickMatch = lineWithoutTags.match(/^:([^!]+)!/);
 			if (!nickMatch) return;
 			const userId = nickMatch[1].toLowerCase();
+			
+			// Ищем тело сообщения
+			const privmsgIdx = lineWithoutTags.indexOf('PRIVMSG');
+			if (privmsgIdx === -1) return;
+			const colonIdx = lineWithoutTags.indexOf(':', privmsgIdx);
+			if (colonIdx === -1) return;
+			const message = lineWithoutTags.slice(colonIdx + 1);
+			
 			const username = tags['display-name'] || userId;
 			const now = Date.now();
 			
