@@ -81,7 +81,7 @@
         .notification-preview-area { background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; padding: 40px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
         .overlay-container { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; pointer-events: none; z-index: 9999; }
         .overlay-container.active { display: block; }
-        .overlay-notification { position: fixed; background: linear-gradient(135deg, #1f1f23 0%, #2d1b69 100%); border: 2px solid #9147ff; border-radius: 16px; padding: 20px 32px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(145, 71, 255, 0.3); animation: slideUp 0.5s ease forwards, slideDown 0.5s ease 5s forwards; pointer-events: none; }
+        .overlay-notification { opacity: 0; position: fixed; background: linear-gradient(135deg, #1f1f23 0%, #2d1b69 100%); border: 2px solid #9147ff; border-radius: 16px; padding: 20px 32px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(145, 71, 255, 0.3); animation: slideUp 0.5s ease forwards, slideDown 0.5s ease 5s forwards; pointer-events: none; }
         @keyframes slideUp { to { transform: translateX(-50%) translateY(0); opacity: 1; } }
         @keyframes slideDown { to { transform: translateX(-50%) translateY(100px); opacity: 0; } }
         .overlay-notification .notif-icon { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #9147ff, #bf94ff); display: flex; align-items: center; justify-content: center; font-size: 28px; }
@@ -282,7 +282,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Позиция уведомления</label>
-                            <select id="overlayPosition">
+                            <select id="overlayPosition" onchange="updatePreviewLive()">
                                 <option value="bottom-center">Снизу по центру</option>
                                 <option value="top-center">Сверху по центру</option>
                                 <option value="bottom-left">Снизу слева</option>
@@ -293,13 +293,13 @@
                         </div>
                         <div class="form-group">
                             <label>Длительность (сек)</label>
-                            <input type="number" id="overlayDuration" value="6" min="2" max="30">
+                            <input type="number" id="overlayDuration" value="6" min="2" max="30" oninput="updatePreviewLive()">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Цвет рамки</label>
-                            <input type="color" id="overlayBorderColor" value="#9147ff">
+                            <input type="color" id="overlayBorderColor" value="#9147ff" oninput="updatePreviewLive()">
                         </div>
                     </div>
                     <button class="btn btn-primary" onclick="saveOverlaySettings()">Сохранить настройки</button>
@@ -370,17 +370,15 @@
     <div class="overlay-container" id="overlayContainer"></div>
 
     <script>
-        // ============ КОНФИГУРАЦИЯ ============
         const CLIENT_ID = 'eyc4k9sznnh9hvi6tg097fvqx9pa9b';
         const REDIRECT_URI = 'https://aleksey1998.github.io/twitchAchievements/';
         const SCOPES = 'chat:read chat:edit user:read:chat channel:read:subscriptions bits:read';
 
-        // ============ СОСТОЯНИЕ ============
         let state = {
             connected: false,
             chatConnected: false,
             client: null,
-			ws: null,
+            ws: null,
             accessToken: null,
             userInfo: null,
             users: {},
@@ -397,50 +395,45 @@
             editingAchievementId: null
         };
 
-        // ============ ИНИЦИАЛИЗАЦИЯ ============
         function init() {
             loadState();
-			renderAchievements();
-			renderUsers();
-			updateOverlayUrl();
-			setupNavigation();
-			setupTabs();
-			startUptimeTimer();
-			checkAuthCallback();
-			
-			// Автопереподключение к чату
-			if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
-				const channel = localStorage.getItem('twitch_channel');
-				document.getElementById('channelName').value = channel;
-				setTimeout(() => {
-					if (!state.chatConnected) connectChat();
-				}, 1500);
-    }
-    
-    checkOverlayMode();
-			
+            renderAchievements();
+            renderUsers();
+            updateOverlayUrl();
+            setupNavigation();
+            setupTabs();
+            startUptimeTimer();
+            checkAuthCallback();
+            
+            if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
+                const channel = localStorage.getItem('twitch_channel');
+                document.getElementById('channelName').value = channel;
+                setTimeout(() => {
+                    if (!state.chatConnected) connectChat();
+                }, 1500);
+            }
+            
+            checkOverlayMode();
         }
 
-			function checkOverlayMode() {
-				const params = new URLSearchParams(window.location.search);
-				if (params.get('overlay') === 'true') {
-					document.getElementById('overlayContainer').classList.add('active');
-					
-					// Если есть авторизация — скрываем dashboard и подключаемся
-					if (state.accessToken && state.userInfo) {
-						document.getElementById('dashboard').style.display = 'none';
-						const channel = localStorage.getItem('twitch_channel');
-						if (channel && !state.chatConnected) {
-							document.getElementById('channelName').value = channel;
-							setTimeout(() => connectChat(), 1000);
-						}
-					} else {
-						// Нет авторизации — показываем dashboard, чтобы пользователь мог войти
-						document.getElementById('dashboard').style.display = 'flex';
-						addLog('Войдите через Twitch для работы оверлея', 'info');
-					}
-				}
-			}
+        function checkOverlayMode() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('overlay') === 'true') {
+                document.getElementById('overlayContainer').classList.add('active');
+                
+                if (state.accessToken && state.userInfo) {
+                    document.getElementById('dashboard').style.display = 'none';
+                    const channel = localStorage.getItem('twitch_channel');
+                    if (channel && !state.chatConnected) {
+                        document.getElementById('channelName').value = channel;
+                        setTimeout(() => connectChat(), 1000);
+                    }
+                } else {
+                    document.getElementById('dashboard').style.display = 'flex';
+                    addLog('Войдите через Twitch для работы оверлея', 'info');
+                }
+            }
+        }
 
         function loadState() {
             try {
@@ -457,8 +450,8 @@
                 document.getElementById('overlayPosition').value = state.overlaySettings.position;
                 document.getElementById('overlayDuration').value = state.overlaySettings.duration;
                 document.getElementById('overlayBorderColor').value = state.overlaySettings.borderColor;
-				const userInfo = localStorage.getItem('twitch_user_info');
-				if (userInfo) state.userInfo = JSON.parse(userInfo);
+                const userInfo = localStorage.getItem('twitch_user_info');
+                if (userInfo) state.userInfo = JSON.parse(userInfo);
             } catch(e) { console.error('Load error:', e); }
         }
 
@@ -473,7 +466,6 @@
             } catch(e) { console.error('Save error:', e); }
         }
 
-        // ============ АВТОРИЗАЦИЯ ============
         function loginWithTwitch() {
             const scope = encodeURIComponent(SCOPES);
             const redirectUri = encodeURIComponent(REDIRECT_URI);
@@ -521,7 +513,7 @@
                 const data = await response.json();
                 if (data.data && data.data[0]) {
                     state.userInfo = data.data[0];
-					localStorage.setItem('twitch_user_info', JSON.stringify(state.userInfo));
+                    localStorage.setItem('twitch_user_info', JSON.stringify(state.userInfo));
                     showConnectedPanel();
                     addLog(`Авторизован как ${state.userInfo.display_name}`, 'info');
                 }
@@ -541,31 +533,29 @@
             if (!document.getElementById('channelName').value) {
                 document.getElementById('channelName').value = state.userInfo.login;
             }
-			// Автоподключение в режиме OBS
-			if (new URLSearchParams(window.location.search).get('overlay') === 'true') {
-				const channel = localStorage.getItem('twitch_channel');
-				if (channel && !state.chatConnected) {
-					setTimeout(() => connectChat(), 1000);
-				}
-			}
+            if (new URLSearchParams(window.location.search).get('overlay') === 'true') {
+                const channel = localStorage.getItem('twitch_channel');
+                if (channel && !state.chatConnected) {
+                    setTimeout(() => connectChat(), 1000);
+                }
+            }
         }
 
         function logout() {
             state.accessToken = null;
             state.userInfo = null;
             localStorage.removeItem('twitch_access_token');
-			localStorage.removeItem('twitch_user_info');
+            localStorage.removeItem('twitch_user_info');
             if (state.ws) {
-				state.ws.close();
-				state.ws = null;
-			}
+                state.ws.close();
+                state.ws = null;
+            }
             state.chatConnected = false;
             document.getElementById('loginPanel').style.display = 'block';
             document.getElementById('connectedPanel').style.display = 'none';
             addLog('Вы вышли из аккаунта', 'info');
         }
 
-        // ============ ПОДКЛЮЧЕНИЕ К ЧАТУ ============
         function toggleChatConnection() {
             if (state.chatConnected) {
                 disconnectChat();
@@ -574,150 +564,131 @@
             }
         }
 
-		function connectChat() {
-			if (!state.userInfo) { alert('Обновите страницу'); return; }
-			if (!state.accessToken) { alert('Сначала авторизуйтесь'); return; }
-			const channel = document.getElementById('channelName').value.trim().toLowerCase();
-			if (!channel) { alert('Введите канал'); return; }
-			localStorage.setItem('twitch_channel', channel);
+        function connectChat() {
+            if (!state.userInfo) { alert('Обновите страницу'); return; }
+            if (!state.accessToken) { alert('Сначала авторизуйтесь'); return; }
+            const channel = document.getElementById('channelName').value.trim().toLowerCase();
+            if (!channel) { alert('Введите канал'); return; }
+            localStorage.setItem('twitch_channel', channel);
 
-			try {
-				state.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-				
-				state.ws.onopen = () => {
-					state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-					state.ws.send(`PASS oauth:${state.accessToken}`);
-					state.ws.send(`NICK ${state.userInfo.login}`);
-					state.ws.send(`JOIN #${channel}`);
-					addLog(`Подключение к #${channel}...`, 'info');
-				};
-				
-				state.ws.onmessage = (event) => {
-					const lines = event.data.split('\r\n');
-					lines.forEach(line => {
-						if (!line) return;
-						if (line.startsWith('PING')) {
-							state.ws.send('PONG' + line.slice(4));
-							return;
-						}
-						if (line.includes('366')) {
-							state.chatConnected = true;
-							state.startTime = Date.now();
-							document.getElementById('connectBtn').textContent = 'Отключиться';
-							document.getElementById('connectBtn').className = 'btn btn-danger';
-							addLog('Подключено к чату', 'info');
-						}
-						if (line.includes('PRIVMSG')) {
-							parseIRCMessage(line);
-						}
-					});
-				};
-				
-				state.ws.onclose = () => {
-					state.chatConnected = false;
-					document.getElementById('connectBtn').textContent = 'Подключиться к чату';
-					document.getElementById('connectBtn').className = 'btn btn-primary';
-					addLog('Отключено от чата', 'error');
-				};
-				
-				state.ws.onerror = (e) => {
-					addLog('Ошибка WebSocket', 'error');
-					console.error(e);
-				};
-			} catch(e) {
-				addLog('Ошибка: ' + e.message, 'error');
-			}
-		}
+            try {
+                state.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+                
+                state.ws.onopen = () => {
+                    state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+                    state.ws.send(`PASS oauth:${state.accessToken}`);
+                    state.ws.send(`NICK ${state.userInfo.login}`);
+                    state.ws.send(`JOIN #${channel}`);
+                    addLog(`Подключение к #${channel}...`, 'info');
+                };
+                
+                state.ws.onmessage = (event) => {
+                    const lines = event.data.split('\r\n');
+                    lines.forEach(line => {
+                        if (!line) return;
+                        if (line.startsWith('PING')) {
+                            state.ws.send('PONG' + line.slice(4));
+                            return;
+                        }
+                        if (line.includes('366')) {
+                            state.chatConnected = true;
+                            state.startTime = Date.now();
+                            document.getElementById('connectBtn').textContent = 'Отключиться';
+                            document.getElementById('connectBtn').className = 'btn btn-danger';
+                            addLog('Подключено к чату', 'info');
+                        }
+                        if (line.includes('PRIVMSG')) {
+                            parseIRCMessage(line);
+                        }
+                    });
+                };
+                
+                state.ws.onclose = () => {
+                    state.chatConnected = false;
+                    document.getElementById('connectBtn').textContent = 'Подключиться к чату';
+                    document.getElementById('connectBtn').className = 'btn btn-primary';
+                    addLog('Отключено от чата', 'error');
+                };
+                
+                state.ws.onerror = (e) => {
+                    addLog('Ошибка WebSocket', 'error');
+                    console.error(e);
+                };
+            } catch(e) {
+                addLog('Ошибка: ' + e.message, 'error');
+            }
+        }
 
         function disconnectChat() {
-			if (state.ws) {
-				state.ws.close();
-				state.ws = null;
-			}
-		}
-		
-		function parseIRCMessage(line) {
-			// Парсим теги
-			const tags = {};
-			let lineWithoutTags = line;
-			if (line.startsWith('@')) {
-				const spaceIdx = line.indexOf(' ');
-				const tagsStr = line.substring(1, spaceIdx);
-				lineWithoutTags = line.substring(spaceIdx + 1);
-				tagsStr.split(';').forEach(pair => {
-					const eqIdx = pair.indexOf('=');
-					if (eqIdx > -1) {
-						tags[pair.substring(0, eqIdx)] = pair.substring(eqIdx + 1);
-					}
-				});
-			}
-			
-			// Ищем никнейм после ":"
-			const nickMatch = lineWithoutTags.match(/^:([^!]+)!/);
-			if (!nickMatch) return;
-			const userId = nickMatch[1].toLowerCase();
-			
-			// Ищем тело сообщения
-			const privmsgIdx = lineWithoutTags.indexOf('PRIVMSG');
-			if (privmsgIdx === -1) return;
-			const colonIdx = lineWithoutTags.indexOf(':', privmsgIdx);
-			if (colonIdx === -1) return;
-			const message = lineWithoutTags.slice(colonIdx + 1);
-			
-			const username = tags['display-name'] || userId;
-			const now = Date.now();
-			
-			if (!state.users[userId]) {
-				state.users[userId] = {
-					name: username, messages: 0, firstMessage: now, lastMessage: now,
-					achievements: [], messageTimestamps: [], emoteCount: 0,
-					capsMessages: 0, bits: 0, subs: 0
-				};
-			}
-			
-			const user = state.users[userId];
-			user.messages++;
-			user.lastMessage = now;
-			user.messageTimestamps.push(now);
-			user.name = username;
-			
-			const tenMinAgo = now - 600000;
-			user.messageTimestamps = user.messageTimestamps.filter(t => t > tenMinAgo);
-			
-			if (message.length > 10 && message === message.toUpperCase()) {
-				user.capsMessages++;
-			}
-			
-			if (tags.emotes) {
-				user.emoteCount += tags.emotes.split('/').filter(e => e).length;
-			}
-			
-			state.stats.messages++;
-			document.getElementById('statMessages').textContent = state.stats.messages;
-			document.getElementById('statUsers').textContent = Object.keys(state.users).length;
-			
-			const color = tags.color || '#9147ff';
-			addChatMessage(username, message, color);
-			checkAchievements(userId, user, message, tags);
-			saveState();
-		}
-		
-        function onChatConnected() {
-            state.chatConnected = true;
-            state.startTime = Date.now();
-            addLog('Подключено к чату', 'info');
-            document.getElementById('connectBtn').textContent = 'Отключиться';
-            document.getElementById('connectBtn').className = 'btn btn-danger';
+            if (state.ws) {
+                state.ws.close();
+                state.ws = null;
+            }
         }
 
-        function onChatDisconnected(reason) {
-            state.chatConnected = false;
-            addLog('Отключено от чата: ' + (reason || 'неизвестно'), 'error');
-            document.getElementById('connectBtn').textContent = 'Подключиться к чату';
-            document.getElementById('connectBtn').className = 'btn btn-primary';
+        function parseIRCMessage(line) {
+            const tags = {};
+            let lineWithoutTags = line;
+            if (line.startsWith('@')) {
+                const spaceIdx = line.indexOf(' ');
+                const tagsStr = line.substring(1, spaceIdx);
+                lineWithoutTags = line.substring(spaceIdx + 1);
+                tagsStr.split(';').forEach(pair => {
+                    const eqIdx = pair.indexOf('=');
+                    if (eqIdx > -1) {
+                        tags[pair.substring(0, eqIdx)] = pair.substring(eqIdx + 1);
+                    }
+                });
+            }
+            
+            const nickMatch = lineWithoutTags.match(/^:([^!]+)!/);
+            if (!nickMatch) return;
+            const userId = nickMatch[1].toLowerCase();
+            
+            const privmsgIdx = lineWithoutTags.indexOf('PRIVMSG');
+            if (privmsgIdx === -1) return;
+            const colonIdx = lineWithoutTags.indexOf(':', privmsgIdx);
+            if (colonIdx === -1) return;
+            const message = lineWithoutTags.slice(colonIdx + 1);
+            
+            const username = tags['display-name'] || userId;
+            const now = Date.now();
+            
+            if (!state.users[userId]) {
+                state.users[userId] = {
+                    name: username, messages: 0, firstMessage: now, lastMessage: now,
+                    achievements: [], messageTimestamps: [], emoteCount: 0,
+                    capsMessages: 0, bits: 0, subs: 0
+                };
+            }
+            
+            const user = state.users[userId];
+            user.messages++;
+            user.lastMessage = now;
+            user.messageTimestamps.push(now);
+            user.name = username;
+            
+            const tenMinAgo = now - 600000;
+            user.messageTimestamps = user.messageTimestamps.filter(t => t > tenMinAgo);
+            
+            if (message.length > 10 && message === message.toUpperCase()) {
+                user.capsMessages++;
+            }
+            
+            if (tags.emotes) {
+                user.emoteCount += tags.emotes.split('/').filter(e => e).length;
+            }
+            
+            state.stats.messages++;
+            document.getElementById('statMessages').textContent = state.stats.messages;
+            document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+            
+            const color = tags.color || '#9147ff';
+            addChatMessage(username, message, color);
+            checkAchievements(userId, user, message, tags);
+            saveState();
         }
 
-        // ============ ОБРАБОТКА СОБЫТИЙ ЧАТА ============
         function onMessage(channel, tags, message, self) {
             if (self) return;
             const username = tags['display-name'] || tags.username;
@@ -765,7 +736,6 @@
             saveState();
         }
 
-        // ============ ПРОВЕРКА АЧИВОК ============
         function checkAchievements(userId, user, message, tags) {
             state.achievements.forEach(ach => {
                 if (!ach.enabled) return;
@@ -820,12 +790,14 @@
             saveState();
         }
 
-        // ============ УВЕДОМЛЕНИЯ ============
         function showNotification(username, achievement) {
             const container = document.getElementById('overlayContainer');
+            if (!container) return;
+            
             const duration = state.overlaySettings.duration || 6;
             const notif = document.createElement('div');
             notif.className = 'overlay-notification';
+            notif.style.animationDuration = `0.5s, 0.5s`;
             notif.style.animationDelay = `0s, ${duration}s`;
             notif.style.borderColor = state.overlaySettings.borderColor;
             notif.innerHTML = `
@@ -837,7 +809,13 @@
             `;
             applyPosition(notif);
             container.appendChild(notif);
-            setTimeout(() => { if (notif.parentNode) notif.remove(); }, (duration + 1) * 1000);
+            
+            console.log('Уведомление создано:', username, achievement.name);
+            
+            setTimeout(() => { 
+                if (notif.parentNode) notif.remove(); 
+            }, (duration + 1) * 1000);
+            
             showInPreview(username, achievement);
         }
 
@@ -892,19 +870,39 @@
         }
 
         function showPreviewNotification() {
-            showNotification('TestUser', { name: 'Тестовая ачивка', icon: '🎉', color: '#9147ff' });
+            const preview = document.getElementById('previewArea');
+            if (!preview) return;
+            
+            const borderColor = state.overlaySettings.borderColor || '#9147ff';
+            const position = state.overlaySettings.position || 'bottom-center';
+            
+            preview.innerHTML = `
+                <div style="position:relative;width:100%;min-height:150px;background:#0e0e10;border-radius:8px;display:flex;align-items:${position.includes('top') ? 'flex-start' : 'flex-end'};justify-content:center;padding:20px;">
+                    <div style="background:linear-gradient(135deg, #1f1f23, #2d1b69);border:2px solid ${borderColor};border-radius:16px;padding:20px 32px;display:flex;align-items:center;gap:16px;">
+                        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,${borderColor},${lightenColor(borderColor,40)});display:flex;align-items:center;justify-content:center;font-size:28px;">🎉</div>
+                        <div>
+                            <div style="font-size:14px;color:#bf94ff;margin-bottom:4px;">НОВАЯ АЧИВКА!</div>
+                            <div style="font-size:18px;font-weight:700;"><span style="color:#9147ff;">TestUser</span> — Тестовая ачивка</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        // ============ ЧАТ ============
         function addChatMessage(username, message, color) {
             const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
             const chatLog = document.getElementById('chatLog');
-            if (state.chatMessages.length === 0) chatLog.innerHTML = '';
+            
+            if (chatLog.querySelector('div[style*="text-align:center"]')) {
+                chatLog.innerHTML = '';
+            }
+            
             state.chatMessages.push({ username, message, color, time });
             if (state.chatMessages.length > 200) {
                 state.chatMessages.shift();
                 if (chatLog.firstChild) chatLog.removeChild(chatLog.firstChild);
             }
+            
             const msgEl = document.createElement('div');
             msgEl.className = 'chat-message';
             msgEl.innerHTML = `<span class="chat-time">${time}</span><span class="chat-username" style="color:${color}">${username}</span>${escapeHtml(message)}`;
@@ -918,7 +916,6 @@
             return div.innerHTML;
         }
 
-        // ============ УПРАВЛЕНИЕ АЧИВКАМИ ============
         function renderAchievements(filter = 'all') {
             const list = document.getElementById('achievementsList');
             let achievements = state.achievements;
@@ -1102,7 +1099,6 @@
             addLog(`Ачивка "${name}" ${state.editingAchievementId ? 'обновлена' : 'создана'}`, 'info');
         }
 
-        // ============ ПРЕСЕТЫ ============
         function addPreset(type) {
             const presets = {
                 first_message: { name: 'Первые шаги', description: 'Первое сообщение в чате', icon: '🎉', color: '#00c853', conditions: [{ type: 'first_message', value: '1' }], logic: 'AND', repeatable: false },
@@ -1125,7 +1121,6 @@
             addLog(`Добавлена ачивка: "${preset.name}"`, 'info');
         }
 
-        // ============ ПОЛЬЗОВАТЕЛИ ============
         function renderUsers() {
             const tbody = document.getElementById('usersTableBody');
             const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
@@ -1148,7 +1143,6 @@
             `).join('');
         }
 
-        // ============ OVERLAY ============
         function updateOverlayUrl() {
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
             document.getElementById('overlayUrl').value = baseUrl + '?overlay=true';
@@ -1171,7 +1165,13 @@
             addLog('Настройки оверлея сохранены', 'info');
         }
 
-        // ============ ЛОГ ============
+        function updatePreviewLive() {
+            state.overlaySettings.position = document.getElementById('overlayPosition').value;
+            state.overlaySettings.duration = parseInt(document.getElementById('overlayDuration').value);
+            state.overlaySettings.borderColor = document.getElementById('overlayBorderColor').value;
+            showPreviewNotification();
+        }
+
         function addLog(message, type = 'info') {
             const time = new Date().toLocaleTimeString('ru-RU');
             state.logs.unshift({ message, type, time });
@@ -1189,7 +1189,6 @@
             document.getElementById('logArea').innerHTML = '';
         }
 
-        // ============ НАВИГАЦИЯ ============
         function setupNavigation() {
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -1223,7 +1222,6 @@
             }, 1000);
         }
 
-        // ============ ЗАПУСК ============
         init();
     </script>
 </body>
