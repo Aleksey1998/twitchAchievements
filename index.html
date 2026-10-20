@@ -187,11 +187,21 @@
                     <button class="btn btn-danger" onclick="logout()" style="margin-top:12px;">Выйти</button>
                 </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="statMessages">0</div>
-                        <div class="stat-label">Сообщений</div>
-                    </div>
+                <div class="connection-panel">
+					<h3>Управление данными</h3>
+					<div style="display:flex;gap:12px;flex-wrap:wrap;">
+						<button class="btn btn-success" onclick="exportData()">📥 Экспорт данных</button>
+						<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Импорт данных</button>
+						<input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+						<button class="btn btn-danger" onclick="clearAllData()">🗑️ Очистить все данные</button>
+					</div>
+				</div>
+
+				<div class="stats-grid">
+					<div class="stat-card">
+						<div class="stat-value" id="statMessages">0</div>
+						<div class="stat-label">Сообщений</div>
+					</div>
                     <div class="stat-card">
                         <div class="stat-value" id="statUsers">0</div>
                         <div class="stat-label">Пользователей</div>
@@ -1233,6 +1243,101 @@
                 }
             }, 1000);
         }
+		
+		function exportData() {
+			const data = {
+				version: '1.0',
+				exportDate: new Date().toISOString(),
+				achievements: state.achievements,
+				users: state.users,
+				stats: state.stats,
+				overlaySettings: state.overlaySettings
+			};
+			
+			const json = JSON.stringify(data, null, 2);
+			const blob = new Blob([json], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `twitch-achievements-backup-${new Date().toISOString().split('T')[0]}.json`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			
+			addLog('📥 Данные экспортированы', 'info');
+		}
+
+		function importData(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+			
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				try {
+					const data = JSON.parse(e.target.result);
+					
+					if (!data.achievements || !data.users) {
+						throw new Error('Неверный формат файла');
+					}
+					
+					if (!confirm('Это заменит все текущие данные. Продолжить?')) {
+						return;
+					}
+					
+					state.achievements = data.achievements || [];
+					state.users = data.users || {};
+					state.stats = data.stats || { messages: 0, achievementsGiven: 0 };
+					state.overlaySettings = data.overlaySettings || state.overlaySettings;
+					
+					saveState();
+					renderAchievements();
+					renderUsers();
+					
+					document.getElementById('statMessages').textContent = state.stats.messages;
+					document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+					document.getElementById('statAchievements').textContent = state.stats.achievementsGiven;
+					
+					addLog('📤 Данные импортированы', 'info');
+					alert('Данные успешно импортированы!');
+					
+				} catch (err) {
+					alert('Ошибка импорта: ' + err.message);
+					addLog('❌ Ошибка импорта данных', 'error');
+				}
+			};
+			reader.readAsText(file);
+			
+			event.target.value = '';
+		}
+
+		function clearAllData() {
+			if (!confirm('Вы уверены? Все данные будут удалены безвозвратно!')) {
+				return;
+			}
+			
+			if (!confirm('Точно удалить ВСЕ данные? Это действие нельзя отменить!')) {
+				return;
+			}
+			
+			localStorage.removeItem('twitch_achievements');
+			localStorage.removeItem('twitch_user_info');
+			localStorage.removeItem('twitch_channel');
+			
+			state.achievements = [];
+			state.users = {};
+			state.stats = { messages: 0, achievementsGiven: 0 };
+			
+			renderAchievements();
+			renderUsers();
+			
+			document.getElementById('statMessages').textContent = '0';
+			document.getElementById('statUsers').textContent = '0';
+			document.getElementById('statAchievements').textContent = '0';
+			
+			addLog('🗑️ Все данные удалены', 'info');
+			alert('Все данные удалены!');
+		}
 
         init();
     </script>
