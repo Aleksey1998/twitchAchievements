@@ -427,7 +427,8 @@
                 }
             }
         }
-
+		const userInfo = localStorage.getItem('twitch_user_info');
+		if (userInfo) state.userInfo = JSON.parse(userInfo);
         function loadState() {
             try {
                 const saved = localStorage.getItem('twitch_achievements');
@@ -505,6 +506,7 @@
                 const data = await response.json();
                 if (data.data && data.data[0]) {
                     state.userInfo = data.data[0];
+					localStorage.setItem('twitch_user_info', JSON.stringify(state.userInfo));
                     showConnectedPanel();
                     addLog(`Авторизован как ${state.userInfo.display_name}`, 'info');
                 }
@@ -530,6 +532,7 @@
             state.accessToken = null;
             state.userInfo = null;
             localStorage.removeItem('twitch_access_token');
+			localStorage.removeItem('twitch_user_info');
             if (state.client) {
                 state.client.disconnect();
                 state.client = null;
@@ -550,6 +553,10 @@
         }
 
         function connectChat() {
+			if (!state.userInfo) {
+				alert('Информация о пользователе не загружена. Обновите страницу.');
+				return;
+			}
             if (!state.accessToken) {
                 alert('Сначала авторизуйтесь через Twitch');
                 return;
