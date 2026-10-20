@@ -388,47 +388,61 @@
         const REDIRECT_URI = 'https://aleksey1998.github.io/twitchAchievements/';
         const SCOPES = 'chat:read chat:edit user:read:chat channel:read:subscriptions bits:read';
 
-        let state = {
-            connected: false,
-            chatConnected: false,
-            client: null,
-            ws: null,
-            accessToken: null,
-            userInfo: null,
-            users: {},
-            achievements: [],
-            chatMessages: [],
-            logs: [],
-            stats: { messages: 0, achievementsGiven: 0 },
-            startTime: null,
-            overlaySettings: {
-                position: 'bottom-center',
-                duration: 6,
-                borderColor: '#9147ff'
-            },
-            editingAchievementId: null
-        };
+		let state = {
+			connected: false,
+			chatConnected: false,
+			client: null,
+			ws: null,
+			accessToken: null,
+			userInfo: null,
+			users: {},
+			achievements: [],
+			chatMessages: [],
+			logs: [],
+			stats: { messages: 0, achievementsGiven: 0 },
+			startTime: null,
+			overlaySettings: {
+				position: 'bottom-center',
+				duration: 6,
+				borderColor: '#9147ff'
+			},
+			editingAchievementId: null,
+			broadcastChannel: null
+		};
 
-        function init() {
-            loadState();
-            renderAchievements();
-            renderUsers();
-            updateOverlayUrl();
-            setupNavigation();
-            setupTabs();
-            startUptimeTimer();
-            checkAuthCallback();
-            
-            if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
-                const channel = localStorage.getItem('twitch_channel');
-                document.getElementById('channelName').value = channel;
-                setTimeout(() => {
-                    if (!state.chatConnected) connectChat();
-                }, 1500);
-            }
-            
-            checkOverlayMode();
-        }
+		function init() {
+			loadState();
+			renderAchievements();
+			renderUsers();
+			updateOverlayUrl();
+			setupNavigation();
+			setupTabs();
+			startUptimeTimer();
+			checkAuthCallback();
+			
+			// Инициализация канала связи между вкладками
+			try {
+				state.broadcastChannel = new BroadcastChannel('twitch-achievements');
+				state.broadcastChannel.onmessage = (event) => {
+					if (event.data.type === 'test-notification') {
+						showNotification(event.data.username, event.data.achievement);
+						addLog('🎯 Тестовое уведомление получено из другой вкладки', 'info');
+					}
+				};
+			} catch(e) {
+				console.warn('BroadcastChannel не поддерживается');
+			}
+			
+			if (state.accessToken && state.userInfo && localStorage.getItem('twitch_channel')) {
+				const channel = localStorage.getItem('twitch_channel');
+				document.getElementById('channelName').value = channel;
+				setTimeout(() => {
+					if (!state.chatConnected) connectChat();
+				}, 1500);
+			}
+			
+			checkOverlayMode();
+		}
 
         function checkOverlayMode() {
             const params = new URLSearchParams(window.location.search);
@@ -589,12 +603,14 @@
                 state.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
                 
                 state.ws.onopen = () => {
-                    state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-                    state.ws.send(`PASS oauth:${state.accessToken}`);
-                    state.ws.send(`NICK ${state.userInfo.login}`);
-                    state.ws.send(`JOIN #${channel}`);
-                    addLog(`Подключение к #${channel}...`, 'info');
-                };
+					if (state.ws.readyState === WebSocket.OPEN) {
+						state.ws.send('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+						state.ws.send(`PASS oauth:${state.accessToken}`);
+						state.ws.send(`NICK ${state.userInfo.login}`);
+						state.ws.send(`JOIN #${channel}`);
+						addLog(`Подключение к #${channel}...`, 'info');
+					}
+				};
                 
                 state.ws.onmessage = (event) => {
                     const lines = event.data.split('\r\n');
@@ -910,22 +926,26 @@
 				color: state.overlaySettings.borderColor || '#9147ff'
 			};
 			
-			const container = document.getElementById('overlayContainer');
-			const wasActive = container.classList.contains('active');
+			const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
 			
-			// Временно показываем контейнер, если он скрыт
-			if (!wasActive) {
-				container.classList.add('active');
-			}
-			
-			showNotification('TestUser', testAchievement);
-			addLog('🎯 Тестовое уведомление отправлено', 'info');
-			
-			// Возвращаем контейнер в исходное состояние через 8 секунд
-			if (!wasActive) {
-				setTimeout(() => {
-					container.classList.remove('active');
-				}, 8000);
+			if (isOverlayMode) {
+				// В режиме OBS — показываем уведомление локально
+				showNotification('TestUser', testAchievement);
+				addLog('🎯 Тестовое уведомление отправлено в OBS', 'info');
+			} else {
+				// На основной странице — отправляем в окно OBS через BroadcastChannel
+				if (state.broadcastChannel) {
+					state.broadcastChannel.postMessage({
+						type: 'test-notification',
+						username: 'TestUser',
+						achievement: testAchievement
+					});
+					addLog('🎯 Тестовое уведомление отправлено в окно OBS', 'info');
+					showInPreview('TestUser', testAchievement);
+				} else {
+					addLog('❌ Канал связи не поддерживается в этом браузере', 'error');
+					alert('Ваш браузер не поддерживает обмен сообщениями между вкладками');
+				}
 			}
 		}
 
