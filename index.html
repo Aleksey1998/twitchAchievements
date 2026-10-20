@@ -187,12 +187,14 @@
                     <button class="btn btn-danger" onclick="logout()" style="margin-top:12px;">Выйти</button>
                 </div>
 
-                <div class="connection-panel">
+				<div class="connection-panel">
 					<h3>Управление данными</h3>
 					<div style="display:flex;gap:12px;flex-wrap:wrap;">
 						<button class="btn btn-success" onclick="exportData()">📥 Экспорт данных</button>
 						<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Импорт данных</button>
 						<input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+						<button class="btn btn-primary" onclick="document.getElementById('importAchFile').click()">🏆 Импорт ачивок</button>
+						<input type="file" id="importAchFile" accept=".json" style="display:none;" onchange="importAchievements(event)">
 						<button class="btn btn-danger" onclick="clearAllData()">🗑️ Очистить все данные</button>
 					</div>
 				</div>
@@ -317,8 +319,8 @@
                 <h3 style="margin:24px 0 12px;">Предпросмотр уведомления</h3>
                 <div class="notification-preview-area" id="previewArea">
                     <button class="btn btn-secondary" onclick="showPreviewNotification()">Показать пример</button>
-					<button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
                 </div>
+				<button class="btn btn-primary" onclick="sendTestToOBS()">🎯 Отправить тест в OBS</button>
             </div>
 
             <div class="page" id="page-log">
@@ -1337,6 +1339,69 @@
 			
 			addLog('🗑️ Все данные удалены', 'info');
 			alert('Все данные удалены!');
+		}
+		
+		//ИМПОРТ АЧИВОК
+		function importAchievements(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+			
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				try {
+					const data = JSON.parse(e.target.result);
+					
+					let achievementsToImport = [];
+					
+					// Проверяем формат файла
+					if (Array.isArray(data)) {
+						// Если это массив ачивок
+						achievementsToImport = data;
+					} else if (data.achievements && Array.isArray(data.achievements)) {
+						// Если это полный экспорт с полем achievements
+						achievementsToImport = data.achievements;
+					} else {
+						throw new Error('Неверный формат файла. Ожидается массив ачивок или объект с полем achievements');
+					}
+					
+					if (achievementsToImport.length === 0) {
+						alert('Файл не содержит ачивок');
+						return;
+					}
+					
+					// Проверяем каждую ачивку
+					const validAchievements = achievementsToImport.filter(ach => {
+						return ach.name && ach.conditions && Array.isArray(ach.conditions);
+					});
+					
+					if (validAchievements.length === 0) {
+						throw new Error('Не найдено валидных ачивок в файле');
+					}
+					
+					// Добавляем ачивки с новыми ID (чтобы избежать конфликтов)
+					validAchievements.forEach(ach => {
+						const newAch = {
+							...ach,
+							id: 'ach_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+							enabled: ach.enabled !== false
+						};
+						state.achievements.push(newAch);
+					});
+					
+					saveState();
+					renderAchievements();
+					
+					addLog(`🏆 Импортировано ${validAchievements.length} ачивок`, 'info');
+					alert(`Успешно импортировано ${validAchievements.length} ачивок!`);
+					
+				} catch (err) {
+					alert('Ошибка импорта ачивок: ' + err.message);
+					addLog('❌ Ошибка импорта ачивок: ' + err.message, 'error');
+				}
+			};
+			reader.readAsText(file);
+			
+			event.target.value = '';
 		}
 
         init();
