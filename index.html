@@ -634,12 +634,17 @@
 				});
 			}
 			
-			const userMatch = line.match(/:([^!]+)![^@]+@[^ ]+ PRIVMSG ([^ ]+) :(.+)$/);
-			if (!userMatch) return;
-			
-			const username = tags['display-name'] || userMatch[1];
-			const userId = userMatch[1].toLowerCase();
-			const message = userMatch[3];
+			// Убираем теги и находим начало сообщения
+			const msgStart = line.indexOf('PRIVMSG');
+			if (msgStart === -1) return;
+			const colonPos = line.indexOf(':', msgStart + 7);
+			if (colonPos === -1) return;
+			const message = line.slice(colonPos + 1);
+			const prefixEnd = line.indexOf(' ', 0);
+			const nickMatch = line.match(/^:([^\s!]+)/);
+			if (!nickMatch) return;
+			const userId = nickMatch[1].toLowerCase();
+			const username = tags['display-name'] || userId;
 			const now = Date.now();
 			
 			if (!state.users[userId]) {
