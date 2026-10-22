@@ -116,14 +116,16 @@
         .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
         .status-indicator.status-connected { background: #00c853; box-shadow: 0 0 4px #00c853; }
         .status-indicator.status-disconnected { background: #eb0400; }
+		.overlay-grid {display: grid; grid-template-columns: 1fr 1fr;}
+		@media (max-width: 1024px) {.overlay-grid {grid-template-columns: 1fr;}}
     </style>
 </head>
 <body>
     <div class="app-container" id="dashboard">
         <div class="sidebar">
             <div class="sidebar-logo">
-                <h1>🏆 Twitch Achievements</h1>
-                <p>Achievement Tracker</p>
+                <h1>🏆 Twitch Ачивки</h1>
+                <p>Создано в ИИ AleksyFairOK </p>
             </div>
             <div class="nav-item active" data-page="connection">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
@@ -282,28 +284,27 @@
                     <div class="chat-placeholder" style="text-align:center;color:#adadb8;padding:40px;">Подключитесь к каналу для отображения чата</div>
                 </div>
             </div>
-
             <div class="page" id="page-overlay">
                 <h2 class="page-title">OBS Оверлей</h2>
                 
-                <div class="connection-panel">
-                    <h3>Настройка оверлея</h3>
-                    <p style="font-size:13px;color:#adadb8;margin-bottom:16px;">
-                        Добавьте браузерный источник в OBS с URL ниже для отображения уведомлений.
-                    </p>
-                    <div class="form-group" style="margin-bottom:16px;">
-                        <label>URL для OBS Browser Source (с авторизацией)</label>
-                        <div style="display:flex;gap:8px;">
-                            <input type="text" id="overlayUrlWithToken" readonly style="font-family:monospace;font-size:11px;">
-                            <button class="btn btn-primary" onclick="copyOBSUrlWithToken()">🔗 Копировать URL с токеном</button>
-                        </div>
-                        <p style="font-size:11px;color:#adadb8;margin-top:4px;">
-                            ⚠️ Этот URL содержит ваш токен авторизации. Не передавайте его третьим лицам!
+                <div class="overlay-grid">
+                    <div class="connection-panel">
+                        <h3>Настройка оверлея</h3>
+                        <p style="font-size:13px;color:#adadb8;margin-bottom:16px;">
+                            Добавьте браузерный источник в OBS с URL ниже для отображения уведомлений.
                         </p>
-                    </div>
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label>URL для OBS Browser Source (с авторизацией)</label>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <input type="text" id="overlayUrlWithToken" readonly style="font-family:monospace;font-size:11px;flex:1;min-width:200px;">
+                                <button class="btn btn-primary" onclick="copyOBSUrlWithToken()">🔗 Копировать URL с токеном</button>
+                            </div>
+                            <p style="font-size:11px;color:#adadb8;margin-top:4px;">
+                                ⚠️ Этот URL содержит ваш токен авторизации. Не передавайте его третьим лицам!
+                            </p>
+                        </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group" style="margin-bottom:12px;">
                             <label>Позиция уведомления</label>
                             <select id="overlayPosition" onchange="updatePreviewLive()">
                                 <option value="bottom-center">Снизу по центру</option>
@@ -314,41 +315,38 @@
                                 <option value="top-right">Сверху справа</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" style="margin-bottom:12px;">
                             <label>Длительность (сек)</label>
                             <input type="number" id="overlayDuration" value="6" min="2" max="30" oninput="updatePreviewLive()">
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group" style="margin-bottom:12px;">
                             <label>Цвет рамки</label>
                             <input type="color" id="overlayBorderColor" value="#9147ff" oninput="updatePreviewLive()">
                         </div>
+                        <button class="btn btn-primary" onclick="saveOverlaySettings()">Сохранить настройки</button>
                     </div>
-                    <button class="btn btn-primary" onclick="saveOverlaySettings()">Сохранить настройки</button>
-                </div>
-                
-                <!-- Панель статуса OBS -->
-                <div class="connection-panel" id="overlayStatusPanel">
-                    <h3>Статус подключения</h3>
-                    <div style="display:flex; gap:24px; margin-bottom:16px;">
-                        <div>
-                            <span style="color:#adadb8; font-size:12px;">Токен:</span>
-                            <div id="tokenStatusText" style="color:#eb0400; font-weight:600; margin-top:4px;">● Не получен</div>
+                    
+                    <!-- Панель статуса OBS -->
+                    <div class="connection-panel" id="overlayStatusPanel">
+                        <h3>Статус подключения</h3>
+                        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+                            <div>
+                                <span style="color:#adadb8; font-size:12px;">Токен:</span>
+                                <div id="tokenStatusText" style="color:#eb0400; font-weight:600; margin-top:4px;">● Не получен</div>
+                            </div>
+                            <div>
+                                <span style="color:#adadb8; font-size:12px;">Чат:</span>
+                                <div id="chatStatus" style="color:#eb0400; font-weight:600; margin-top:4px;">● Отключен</div>
+                            </div>
+                            <div>
+                                <span style="color:#adadb8; font-size:12px;">Ачивок загружено:</span>
+                                <div id="achievementsCount" style="color:#bf94ff; font-weight:600; margin-top:4px;">0</div>
+                            </div>
                         </div>
-                        <div>
-                            <span style="color:#adadb8; font-size:12px;">Чат:</span>
-                            <div id="chatStatus" style="color:#eb0400; font-weight:600; margin-top:4px;">● Отключен</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn btn-secondary btn-small" onclick="checkConnection()">🔄 Проверить подключение</button>
+                            <button class="btn btn-success btn-small" onclick="syncAchievements()">🔄 Синхронизировать ачивки</button>
                         </div>
-                        <div>
-                            <span style="color:#adadb8; font-size:12px;">Ачивок загружено:</span>
-                            <div id="achievementsCount" style="color:#bf94ff; font-weight:600; margin-top:4px;">0</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button class="btn btn-primary btn-small" onclick="testOBSNotification()">🎯 Тест уведомления</button>
-                        <button class="btn btn-secondary btn-small" onclick="checkConnection()">🔄 Проверить подключение</button>
-                        <button class="btn btn-success btn-small" onclick="syncAchievements()">🔄 Синхронизировать ачивки</button>
                     </div>
                 </div>
                 
@@ -777,23 +775,6 @@
                 addLog('❌ Ошибка синхронизации: ' + e.message, 'error');
                 alert('Ошибка синхронизации: ' + e.message);
             }
-        }
-
-        function testOBSNotification() {
-            addLog('🎯 Отправка тестового уведомления...', 'info');
-            
-            if (!state.chatConnected) {
-                addLog('⚠️ Чат не подключен, уведомление все равно будет показано', 'info');
-            }
-            
-            const testAchievement = {
-                name: 'Тестовое уведомление OBS',
-                icon: '🎯',
-                color: state.overlaySettings.borderColor || '#9147ff'
-            };
-            
-            showNotification('TestUser', testAchievement);
-            addLog('✅ Тестовое уведомление отправлено', 'info');
         }
         
         function logout() {
