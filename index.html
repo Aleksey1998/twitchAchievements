@@ -1,19 +1,4 @@
-
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                body {
-                  background-color: white; /* Ensure the iframe has a white background */
-                }
-
-                
-              </style>
-                        </head>
-                        <body>
-                            <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -355,10 +340,15 @@
                             <span style="color:#adadb8; font-size:12px;">Чат:</span>
                             <div id="chatStatus" style="color:#eb0400; font-weight:600; margin-top:4px;">● Отключен</div>
                         </div>
+                        <div>
+                            <span style="color:#adadb8; font-size:12px;">Ачивок загружено:</span>
+                            <div id="achievementsCount" style="color:#bf94ff; font-weight:600; margin-top:4px;">0</div>
+                        </div>
                     </div>
-                    <div style="display:flex; gap:8px;">
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button class="btn btn-primary btn-small" onclick="testOBSNotification()">🎯 Тест уведомления</button>
                         <button class="btn btn-secondary btn-small" onclick="checkConnection()">🔄 Проверить подключение</button>
+                        <button class="btn btn-success btn-small" onclick="syncAchievements()">🔄 Синхронизировать ачивки</button>
                     </div>
                 </div>
                 
@@ -543,9 +533,12 @@
                 }
                 const channel = localStorage.getItem('twitch_channel');
                 if (channel) document.getElementById('channelName').value = channel;
-                document.getElementById('overlayPosition').value = state.overlaySettings.position;
-                document.getElementById('overlayDuration').value = state.overlaySettings.duration;
-                document.getElementById('overlayBorderColor').value = state.overlaySettings.borderColor;
+                const overlayPosition = document.getElementById('overlayPosition');
+                if (overlayPosition) overlayPosition.value = state.overlaySettings.position;
+                const overlayDuration = document.getElementById('overlayDuration');
+                if (overlayDuration) overlayDuration.value = state.overlaySettings.duration;
+                const overlayBorderColor = document.getElementById('overlayBorderColor');
+                if (overlayBorderColor) overlayBorderColor.value = state.overlaySettings.borderColor;
                 const userInfo = localStorage.getItem('twitch_user_info');
                 if (userInfo) state.userInfo = JSON.parse(userInfo);
             } catch(e) { console.error('Load error:', e); }
@@ -621,9 +614,12 @@
         }
 
         function showConnectedPanel() {
+            const loginPanel = document.getElementById('loginPanel');
+            const connectedPanel = document.getElementById('connectedPanel');
+            if (!loginPanel || !connectedPanel) return;
             if (!state.userInfo) return;
-            document.getElementById('loginPanel').style.display = 'none';
-            document.getElementById('connectedPanel').style.display = 'block';
+            loginPanel.style.display = 'none';
+            connectedPanel.style.display = 'block';
             document.getElementById('userName').textContent = state.userInfo.display_name;
             document.getElementById('userLogin').textContent = '@' + state.userInfo.login;
             document.getElementById('userAvatar').src = state.userInfo.profile_image_url;
@@ -633,6 +629,7 @@
             if (new URLSearchParams(window.location.search).get('overlay') === 'true') {
                 const channel = localStorage.getItem('twitch_channel');
                 if (channel && !state.chatConnected) {
+                    document.getElementById('channelName').value = channel;
                     setTimeout(() => connectChat(), 1000);
                 }
             }
@@ -687,6 +684,7 @@
             const token = state.accessToken || localStorage.getItem('twitch_access_token');
             updateTokenStatus(token);
             updateConnectionStatus();
+            updateAchievementsCount();
         }
 
         function updateTokenStatus(token) {
@@ -715,6 +713,14 @@
             }
         }
 
+        function updateAchievementsCount() {
+            const el = document.getElementById('achievementsCount');
+            if (el) {
+                const activeCount = state.achievements.filter(a => a.enabled).length;
+                el.textContent = `${activeCount} / ${state.achievements.length}`;
+            }
+        }
+
         function checkConnection() {
             addLog('🔄 Проверка подключения...', 'info');
             
@@ -732,12 +738,14 @@
                 return;
             }
             
+            const achCount = state.achievements.filter(a => a.enabled).length;
+            
             if (state.chatConnected) {
                 addLog('✅ Подключение к чату активно', 'info');
-                alert('✅ Статус:\n• Токен: получен\n• Канал: ' + channel + '\n• Чат: подключен');
+                alert(`✅ Статус:\n• Токен: получен\n• Канал: ${channel}\n• Чат: подключен\n• Ачивок загружено: ${achCount}`);
             } else {
                 addLog('⚠️ Чат не подключен, пытаемся переподключиться...', 'info');
-                alert('⚠️ Статус:\n• Токен: получен\n• Канал: ' + channel + '\n• Чат: отключен\n\nПытаемся переподключиться...');
+                alert(`⚠️ Статус:\n• Токен: получен\n• Канал: ${channel}\n• Чат: отключен\n• Ачивок загружено: ${achCount}\n\nПытаемся переподключиться...`);
                 
                 if (state.ws) {
                     state.ws.close();
@@ -746,6 +754,29 @@
             }
             
             updateConnectionStatus();
+            updateAchievementsCount();
+        }
+
+        function syncAchievements() {
+            addLog('🔄 Синхронизация ачивок...', 'info');
+            
+            try {
+                const saved = localStorage.getItem('twitch_achievements');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    state.achievements = data.achievements || [];
+                    const activeCount = state.achievements.filter(a => a.enabled).length;
+                    addLog(`✅ Синхронизировано ${state.achievements.length} ачивок (активных: ${activeCount})`, 'info');
+                    updateAchievementsCount();
+                    alert(`Синхронизировано ${state.achievements.length} ачивок!\n\nАктивных: ${activeCount}`);
+                } else {
+                    addLog('❌ Нет сохранённых ачивок в localStorage', 'error');
+                    alert('Нет сохранённых ачивок. Создайте ачивки на основной странице.');
+                }
+            } catch(e) {
+                addLog('❌ Ошибка синхронизации: ' + e.message, 'error');
+                alert('Ошибка синхронизации: ' + e.message);
+            }
         }
 
         function testOBSNotification() {
@@ -775,8 +806,10 @@
                 state.ws = null;
             }
             state.chatConnected = false;
-            document.getElementById('loginPanel').style.display = 'block';
-            document.getElementById('connectedPanel').style.display = 'none';
+            const loginPanel = document.getElementById('loginPanel');
+            const connectedPanel = document.getElementById('connectedPanel');
+            if (loginPanel) loginPanel.style.display = 'block';
+            if (connectedPanel) connectedPanel.style.display = 'none';
             addLog('Вы вышли из аккаунта', 'info');
         }
 
@@ -820,9 +853,20 @@
                         if (line.includes('366')) {
                             state.chatConnected = true;
                             state.startTime = Date.now();
-                            document.getElementById('connectBtn').textContent = 'Отключиться';
-                            document.getElementById('connectBtn').className = 'btn btn-danger';
+                            const connectBtn = document.getElementById('connectBtn');
+                            if (connectBtn) {
+                                connectBtn.textContent = 'Отключиться';
+                                connectBtn.className = 'btn btn-danger';
+                            }
                             addLog('Подключено к чату', 'info');
+                            
+                            const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
+                            if (isOverlayMode) {
+                                console.log('✅ OBS подключен к чату и готов получать сообщения');
+                                addLog('✅ OBS готов получать сообщения из чата', 'info');
+                                syncAchievements();
+                            }
+                            
                             updateConnectionStatus();
                         }
                         if (line.includes('PRIVMSG')) {
@@ -833,8 +877,11 @@
                 
                 state.ws.onclose = () => {
                     state.chatConnected = false;
-                    document.getElementById('connectBtn').textContent = 'Подключиться к чату';
-                    document.getElementById('connectBtn').className = 'btn btn-primary';
+                    const connectBtn = document.getElementById('connectBtn');
+                    if (connectBtn) {
+                        connectBtn.textContent = 'Подключиться к чату';
+                        connectBtn.className = 'btn btn-primary';
+                    }
                     addLog('Отключено от чата', 'error');
                     updateConnectionStatus();
                 };
@@ -856,6 +903,13 @@
         }
 
         function parseIRCMessage(line) {
+            console.log('💬 Получено сообщение из чата:', line.substring(0, 100));
+            
+            const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
+            if (isOverlayMode) {
+                addLog('💬 Получено сообщение из чата', 'info');
+            }
+            
             const tags = {};
             let lineWithoutTags = line;
             if (line.startsWith('@')) {
@@ -909,8 +963,10 @@
             }
             
             state.stats.messages++;
-            document.getElementById('statMessages').textContent = state.stats.messages;
-            document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+            const statMessages = document.getElementById('statMessages');
+            const statUsers = document.getElementById('statUsers');
+            if (statMessages) statMessages.textContent = state.stats.messages;
+            if (statUsers) statUsers.textContent = Object.keys(state.users).length;
             
             const color = tags.color || '#9147ff';
             addChatMessage(username, message, color);
@@ -920,10 +976,29 @@
 
         // ============ ПРОВЕРКА АЧИВОК ============
         function checkAchievements(userId, user, message, tags) {
+            const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
+            
+            if (isOverlayMode) {
+                console.log(`🔍 Проверка ачивок для ${userId}. Всего ачивок:`, state.achievements.length);
+            }
+            
             state.achievements.forEach(ach => {
-                if (!ach.enabled) return;
-                if (!ach.repeatable && user.achievements.includes(ach.id)) return;
-                if (evaluateConditions(ach.conditions, ach.logic, user, message, tags)) {
+                if (!ach.enabled) {
+                    if (isOverlayMode) console.log(`⏸️ Ачивка отключена: ${ach.name}`);
+                    return;
+                }
+                if (!ach.repeatable && user.achievements.includes(ach.id)) {
+                    if (isOverlayMode) console.log(`✓ Ачивка уже получена: ${ach.name}`);
+                    return;
+                }
+                
+                const conditionMet = evaluateConditions(ach.conditions, ach.logic, user, message, tags);
+                
+                if (isOverlayMode) {
+                    console.log(`🎯 Ачивка "${ach.name}" - условия выполнены:`, conditionMet);
+                }
+                
+                if (conditionMet) {
                     awardAchievement(userId, user, ach);
                 }
             });
@@ -963,11 +1038,19 @@
         }
 
         function awardAchievement(userId, user, ach) {
+            const isOverlayMode = new URLSearchParams(window.location.search).get('overlay') === 'true';
+            
+            if (isOverlayMode) {
+                console.log(`🏆 Выдача ачивки "${ach.name}" пользователю ${user.name}`);
+                addLog(`🏆 Выдача ачивки "${ach.name}" пользователю ${user.name}`, 'achievement');
+            }
+            
             if (!user.achievements.includes(ach.id)) {
                 user.achievements.push(ach.id);
             }
             state.stats.achievementsGiven++;
-            document.getElementById('statAchievements').textContent = state.stats.achievementsGiven;
+            const statAchievements = document.getElementById('statAchievements');
+            if (statAchievements) statAchievements.textContent = state.stats.achievementsGiven;
             addLog(`🏆 ${user.name} получил ачивку "${ach.name}"!`, 'achievement');
             showNotification(user.name, ach);
             saveState();
@@ -976,7 +1059,12 @@
         // ============ УВЕДОМЛЕНИЯ ============
         function showNotification(username, achievement) {
             const container = document.getElementById('overlayContainer');
-            if (!container) return;
+            if (!container) {
+                console.error('❌ overlayContainer не найден!');
+                return;
+            }
+            
+            console.log('🔔 showNotification вызвана:', username, achievement.name);
             
             const duration = state.overlaySettings.duration || 6;
             const notif = document.createElement('div');
@@ -994,7 +1082,7 @@
             applyPosition(notif);
             container.appendChild(notif);
             
-            console.log('Уведомление создано:', username, achievement.name);
+            console.log('✅ Уведомление добавлено в DOM');
             
             setTimeout(() => { 
                 if (notif.parentNode) notif.remove(); 
@@ -1127,6 +1215,7 @@
         function addChatMessage(username, message, color) {
             const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
             const chatLog = document.getElementById('chatLog');
+            if (!chatLog) return;
             
             const placeholder = chatLog.querySelector('.chat-placeholder');
             if (placeholder) {
@@ -1155,6 +1244,7 @@
         // ============ УПРАВЛЕНИЕ АЧИВКАМИ ============
         function renderAchievements(filter = 'all') {
             const list = document.getElementById('achievementsList');
+            if (!list) return;
             let achievements = state.achievements;
             if (filter === 'active') achievements = achievements.filter(a => a.enabled);
             if (filter === 'disabled') achievements = achievements.filter(a => !a.enabled);
@@ -1371,12 +1461,14 @@
             saveState();
             renderUsers();
             
-            document.getElementById('statUsers').textContent = Object.keys(state.users).length;
+            const statUsers = document.getElementById('statUsers');
+            if (statUsers) statUsers.textContent = Object.keys(state.users).length;
             addLog(`🗑️ Пользователь ${user.name} удалён из списка`, 'info');
         }
 
         function renderUsers() {
             const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
             const search = (document.getElementById('userSearch')?.value || '').toLowerCase();
             let users = Object.entries(state.users)
                 .map(([id, u]) => ({ id, ...u }))
@@ -1401,7 +1493,7 @@
         // ============ OVERLAY ============
         function generateOBSUrl() {
             const token = state.accessToken || localStorage.getItem('twitch_access_token');
-            const channel = localStorage.getItem('twitch_channel') || state.userInfo?.login;
+            const channel = localStorage.getItem('twitch_channel') || (state.userInfo ? state.userInfo.login : null);
             
             if (!token || !channel) {
                 alert('Сначала авторизуйтесь и подключитесь к чату');
@@ -1465,6 +1557,7 @@
             state.logs.unshift({ message, type, time });
             if (state.logs.length > 500) state.logs.pop();
             const logArea = document.getElementById('logArea');
+            if (!logArea) return;
             const entry = document.createElement('div');
             entry.className = 'log-entry ' + type;
             entry.textContent = `[${time}] ${message}`;
@@ -1474,7 +1567,8 @@
 
         function clearLog() {
             state.logs = [];
-            document.getElementById('logArea').innerHTML = '';
+            const logArea = document.getElementById('logArea');
+            if (logArea) logArea.innerHTML = '';
         }
 
         // ============ НАВИГАЦИЯ ============
@@ -1509,8 +1603,10 @@
                     const elapsed = Date.now() - state.startTime;
                     const mins = Math.floor(elapsed / 60000);
                     const secs = Math.floor((elapsed % 60000) / 1000);
-                    document.getElementById('statUptime').textContent = 
-                        `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                    const statUptime = document.getElementById('statUptime');
+                    if (statUptime) {
+                        statUptime.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                    }
                 }
             }, 1000);
         }
@@ -1566,9 +1662,12 @@
                     renderAchievements();
                     renderUsers();
                     
-                    document.getElementById('statMessages').textContent = state.stats.messages;
-                    document.getElementById('statUsers').textContent = Object.keys(state.users).length;
-                    document.getElementById('statAchievements').textContent = state.stats.achievementsGiven;
+                    const statMessages = document.getElementById('statMessages');
+                    const statUsers = document.getElementById('statUsers');
+                    const statAchievements = document.getElementById('statAchievements');
+                    if (statMessages) statMessages.textContent = state.stats.messages;
+                    if (statUsers) statUsers.textContent = Object.keys(state.users).length;
+                    if (statAchievements) statAchievements.textContent = state.stats.achievementsGiven;
                     
                     addLog('📤 Данные импортированы', 'info');
                     alert('Данные успешно импортированы!');
@@ -1603,9 +1702,12 @@
             renderAchievements();
             renderUsers();
             
-            document.getElementById('statMessages').textContent = '0';
-            document.getElementById('statUsers').textContent = '0';
-            document.getElementById('statAchievements').textContent = '0';
+            const statMessages = document.getElementById('statMessages');
+            const statUsers = document.getElementById('statUsers');
+            const statAchievements = document.getElementById('statAchievements');
+            if (statMessages) statMessages.textContent = '0';
+            if (statUsers) statUsers.textContent = '0';
+            if (statAchievements) statAchievements.textContent = '0';
             
             addLog('🗑️ Все данные удалены', 'info');
             alert('Все данные удалены!');
@@ -1673,49 +1775,3 @@
     </script>
 </body>
 </html>
-<div class="page" id="page-overlay">
-    <h2>OBS Оверлей</h2>
-    <div class="connection-panel">
-        <h3>Настройка оверлея</h3>
-        ...
-    </div>
-    <div class="connection-panel" id="overlayStatusPanel">
-        ...
-    </div>
-    
-    <div class="connection-panel">
-        <h3>Настройка оверлея</h3>  <!-- ← ДУБЛИРУЮЩИЙСЯ ЗАГОЛОВОК! -->
-    <h3>Предпросмотр уведомления</h3>  <!-- ← ВНУТРИ connection-panel! -->
-    <div class="notification-preview-area">
-        ...
-    </div>
-    <div>  <!-- ← КНОПКИ ВНУТРИ connection-panel! -->
-        ...
-    </div>
-</div>  <!-- ← Только ОДНА закрывающая скобка для двух открытых! -->
-
-
-              <script>
-                              function checkOverlayMode() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('overlay') === 'true') {
-        document.getElementById('overlayContainer').classList.add('active');
-        
-        const tokenFromUrl = params.get('token');
-        const channelFromUrl = params.get('channel');
-
-        function setupNavigation() {  // ← ВНУТРИ checkOverlayMode!
-            ...
-        }
-
-function checkOverlayMode() {
-    ...
-    function updateOverlayStatus() {  // ← ВНУТРИ checkOverlayMode!
-        ...
-    }
-
-
-              </script>
-                        </body>
-                        </html>
-                    
