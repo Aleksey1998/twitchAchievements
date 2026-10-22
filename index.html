@@ -20,7 +20,7 @@
         .page { display: none; }
         .page.active { display: block; }
         .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
-        .connection-panel { background: #1f1f23; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #2f2f35; }
+        .connection-panel { margin: 10px; background: #1f1f23; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #2f2f35; }
         .connection-panel h3 { margin-bottom: 16px; font-size: 16px; }
         .form-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: end; }
         .form-group { flex: 1; }
@@ -78,7 +78,7 @@
         .users-table th { background: #0e0e10; font-weight: 600; color: #adadb8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
         .users-table tr { border-bottom: 1px solid #2f2f35; }
         .users-table tr:last-child { border-bottom: none; }
-        .notification-preview-area { background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 12px; }
+        .notification-preview-area {margin: 10px; background: #1f1f23; border-radius: 12px; border: 1px solid #2f2f35; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 12px; }
         .overlay-container { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; pointer-events: none; z-index: 9999; }
         .overlay-container.active { display: block; }
         .overlay-notification { opacity: 0; position: fixed; background: linear-gradient(135deg, #1f1f23 0%, #2d1b69 100%); border: 2px solid #9147ff; border-radius: 16px; padding: 20px 32px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(145, 71, 255, 0.3); animation: slideUp 0.5s ease forwards, slideDown 0.5s ease 5s forwards; pointer-events: none; }
@@ -125,7 +125,7 @@
         <div class="sidebar">
             <div class="sidebar-logo">
                 <h1>🏆 Twitch Ачивки</h1>
-                <p>Создано в ИИ AleksyFairOK </p>
+                <p>Создано в ИИ <a href="https://www.twitch.tv/alekseyfairok">AlekseyFairOK</a> </p>
             </div>
             <div class="nav-item active" data-page="connection">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
@@ -644,24 +644,43 @@
                 updateTokenStatus(tokenFromUrl);
                 
                 if (tokenFromUrl) {
-                    state.accessToken = tokenFromUrl;
-                    localStorage.setItem('twitch_access_token', tokenFromUrl);
-                    
-                    if (channelFromUrl) {
-                        localStorage.setItem('twitch_channel', channelFromUrl);
-                    }
-                    
-                    fetchUserInfo().then(() => {
-                        if (state.userInfo) {
-                            document.getElementById('dashboard').style.display = 'none';
-                            const channel = channelFromUrl || localStorage.getItem('twitch_channel');
-                            if (channel && !state.chatConnected) {
-                                document.getElementById('channelName').value = channel;
-                                setTimeout(() => connectChat(), 1000);
-                            }
-                        }
-                    });
-                } else if (state.accessToken && state.userInfo) {
+					state.accessToken = tokenFromUrl;
+					localStorage.setItem('twitch_access_token', tokenFromUrl);
+					
+					if (channelFromUrl) {
+						localStorage.setItem('twitch_channel', channelFromUrl);
+					}
+					
+					// Загружаем ачивки из URL
+					const achievementsFromUrl = params.get('achievements');
+					if (achievementsFromUrl) {
+						try {
+							const achievementsJson = decodeURIComponent(escape(atob(achievementsFromUrl)));
+							state.achievements = JSON.parse(achievementsJson);
+							localStorage.setItem('twitch_achievements', JSON.stringify({
+								achievements: state.achievements,
+								overlaySettings: state.overlaySettings,
+								users: state.users,
+								stats: state.stats
+							}));
+							addLog(`✅ Загружено ${state.achievements.length} ачивок из URL`, 'info');
+						} catch(e) {
+							console.error('Ошибка декодирования ачивок:', e);
+							addLog('❌ Ошибка загрузки ачивок из URL', 'error');
+						}
+					}
+					
+					fetchUserInfo().then(() => {
+						if (state.userInfo) {
+							document.getElementById('dashboard').style.display = 'none';
+							const channel = channelFromUrl || localStorage.getItem('twitch_channel');
+							if (channel && !state.chatConnected) {
+								document.getElementById('channelName').value = channel;
+								setTimeout(() => connectChat(), 1000);
+							}
+						}
+					});
+				} else if (state.accessToken && state.userInfo) {
                     document.getElementById('dashboard').style.display = 'none';
                     const channel = localStorage.getItem('twitch_channel');
                     if (channel && !state.chatConnected) {
@@ -1472,20 +1491,31 @@
         }
 
         // ============ OVERLAY ============
-        function generateOBSUrl() {
-            const token = state.accessToken || localStorage.getItem('twitch_access_token');
-            const channel = localStorage.getItem('twitch_channel') || (state.userInfo ? state.userInfo.login : null);
-            
-            if (!token || !channel) {
-                alert('Сначала авторизуйтесь и подключитесь к чату');
-                return null;
-            }
-            
-            const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            const obsUrl = `${baseUrl}?overlay=true&token=${encodeURIComponent(token)}&channel=${encodeURIComponent(channel)}`;
-            
-            return obsUrl;
-        }
+		function generateOBSUrl() {
+			const token = state.accessToken || localStorage.getItem('twitch_access_token');
+			const channel = localStorage.getItem('twitch_channel') || (state.userInfo ? state.userInfo.login : null);
+			
+			if (!token || !channel) {
+				alert('Сначала авторизуйтесь и подключитесь к чату');
+				return null;
+			}
+			
+			// Кодируем ачивки в base64 для передачи через URL
+			let achievementsParam = '';
+			if (state.achievements.length > 0) {
+				try {
+					const achievementsJson = JSON.stringify(state.achievements);
+					achievementsParam = '&achievements=' + encodeURIComponent(btoa(unescape(encodeURIComponent(achievementsJson))));
+				} catch(e) {
+					console.error('Ошибка кодирования ачивок:', e);
+				}
+			}
+			
+			const baseUrl = window.location.href.split('?')[0].split('#')[0];
+			const obsUrl = `${baseUrl}?overlay=true&token=${encodeURIComponent(token)}&channel=${encodeURIComponent(channel)}${achievementsParam}`;
+			
+			return obsUrl;
+		}
 
         function copyOBSUrlWithToken() {
             const obsUrl = generateOBSUrl();
