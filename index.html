@@ -633,7 +633,7 @@
             }
         }
 
-        function checkOverlayMode() {
+        async function checkOverlayMode() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('overlay') === 'true') {
                 document.getElementById('overlayContainer').classList.add('active');
@@ -655,7 +655,15 @@
 					const achievementsFromUrl = params.get('achievements');
 					if (achievementsFromUrl) {
 						try {
-							const achievementsJson = decodeURIComponent(escape(atob(achievementsFromUrl)));
+							let achievementsJson;
+							const decodedUrlParam = decodeURIComponent(achievementsFromUrl);
+							try {
+								// Пробуем распаковать как сжатые данные (gzip)
+								achievementsJson = await decompressFromBase64Url(decodedUrlParam);
+							} catch (e) {
+								// Если не вышло, пробуем старый метод (обычный base64) для обратной совместимости
+								achievementsJson = decodeURIComponent(escape(atob(decodedUrlParam)));
+							}
 							state.achievements = JSON.parse(achievementsJson);
 							localStorage.setItem('twitch_achievements', JSON.stringify({
 								achievements: state.achievements,
@@ -663,7 +671,7 @@
 								users: state.users,
 								stats: state.stats
 							}));
-							addLog(`✅ Загружено ${state.achievements.length} ачивок из URL`, 'info');
+							addLog(`✅ Загружено ${state.achievements.length} ачивок из URL (сжато)`, 'info');
 						} catch(e) {
 							console.error('Ошибка декодирования ачивок:', e);
 							addLog('❌ Ошибка загрузки ачивок из URL', 'error');
@@ -1161,8 +1169,8 @@
             `;
         }
 
-        function openOBSWindow() {
-            const overlayUrl = generateOBSUrl();
+        async function openOBSWindow() {
+            const overlayUrl = await generateOBSUrl();
             if (!overlayUrl) return;
             
             obsWindow = window.open(overlayUrl, 'twitch-obs-overlay', 'width=1920,height=1080');
@@ -1491,7 +1499,7 @@
         }
 
         // ============ OVERLAY ============
-		function generateOBSUrl() {
+		async function generateOBSUrl() {
 			const token = state.accessToken || localStorage.getItem('twitch_access_token');
 			const channel = localStorage.getItem('twitch_channel') || (state.userInfo ? state.userInfo.login : null);
 			
@@ -1500,25 +1508,25 @@
 				return null;
 			}
 			
-			// Кодируем ачивки в base64 для передачи через URL
 			let achievementsParam = '';
 			if (state.achievements.length > 0) {
 				try {
 					const achievementsJson = JSON.stringify(state.achievements);
-					achievementsParam = '&achievements=' + encodeURIComponent(btoa(unescape(encodeURIComponent(achievementsJson))));
+					const compressed = await compressToBase64Url(achievementsJson);
+					achievementsParam = '&achievements=' + encodeURIComponent(compressed);
 				} catch(e) {
-					console.error('Ошибка кодирования ачивок:', e);
+					console.error('Ошибка сжатия ачивок, используем резервный метод:', e);
+					const achievementsJson = JSON.stringify(state.achievements);
+					achievementsParam = '&achievements=' + encodeURIComponent(btoa(unescape(encodeURIComponent(achievementsJson))));
 				}
 			}
 			
 			const baseUrl = window.location.href.split('?')[0].split('#')[0];
-			const obsUrl = `${baseUrl}?overlay=true&token=${encodeURIComponent(token)}&channel=${encodeURIComponent(channel)}${achievementsParam}`;
-			
-			return obsUrl;
+			return `${baseUrl}?overlay=true&token=${encodeURIComponent(token)}&channel=${encodeURIComponent(channel)}${achievementsParam}`;
 		}
 
-        function copyOBSUrlWithToken() {
-            const obsUrl = generateOBSUrl();
+        async function copyOBSUrlWithToken() {
+            const obsUrl = await generateOBSUrl();
             if (!obsUrl) return;
             
             navigator.clipboard.writeText(obsUrl).then(() => {
@@ -1535,8 +1543,8 @@
             });
         }
 
-        function updateOverlayUrl() {
-            const obsUrlWithToken = generateOBSUrl();
+        async function updateOverlayUrl() {
+            const obsUrlWithToken = await generateOBSUrl();
             if (obsUrlWithToken) {
                 const inputWithToken = document.getElementById('overlayUrlWithToken');
                 if (inputWithToken) {
@@ -1782,7 +1790,46 @@
         }
 
         // ============ ЗАПУСК ============
-        init();
+		
+        // ============ СЖАТИЕ ДАННЫХ (GZIP) ============
+		async function compressToBase64Url(str) {
+			const encoder = new TextEncoder();
+			const data = encoder.encode(str);
+			const stream = new Blob([data]).stream().pipeThrough(new CompressionStream('gzip'));
+			const compressed = await new Response(stream).arrayBuffer();
+			
+			let binary = '';
+			const bytes = new Uint8Array(compressed);
+			for (let i = 0; i < bytes.length; i++) {
+				binary += String.fromCharCode(bytes[i]);
+			}
+			const b64 = btoa(binary);
+			// Преобразуем в Base64Url (безопасный для URL формат)
+			return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+		}
+
+		async function decompressFromBase64Url(base64Url) {
+			// Восстанавливаем стандартный Base64
+			let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+			while (base64.length % 4) {
+				base64 += '=';
+			}
+			
+			const binaryString = atob(base64);
+			const len = binaryString.length;
+			const bytes = new Uint8Array(len);
+			for (let i = 0; i < len; i++) {
+				bytes[i] = binaryString.charCodeAt(i);
+			}
+			
+			const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+			const decompressed = await new Response(stream).arrayBuffer();
+			const decoder = new TextDecoder();
+			return decoder.decode(decompressed);
+		}
+		
+		
+		init();
     </script>
 </body>
 </html>
